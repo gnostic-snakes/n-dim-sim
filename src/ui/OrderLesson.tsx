@@ -30,7 +30,11 @@ export function lessonScene(p1: Plane, p2: Plane, a1 = 40, a2 = 55, dim = 4): Sc
     shape: 'hypercube',
     params: { ...defaultParams(def), size: 1.7 },
     options: defaultOptions(def),
-    ops: [rotOp('r1', p1, a1), rotOp('r2', p2, a2), { id: 'tx', kind: 'translate' as const, enabled: true, plane: [0, 1] as Plane, axis: 0, value: x }],
+    ops: [
+      rotOp('r1', p1, a1),
+      rotOp('r2', p2, a2),
+      { id: 'tx', kind: 'translate' as const, enabled: true, plane: [0, 1] as Plane, axis: 0, value: x },
+    ],
     color,
     visible: true,
     label,
@@ -125,7 +129,9 @@ export function OrderLesson() {
   const setPlane = (which: 'r1' | 'r2', plane: Plane) =>
     setScene((s) => ({
       ...s,
-      objects: s.objects.map((o) => (o.id === A || o.id === B ? { ...o, ops: o.ops.map((op) => (op.id === which ? { ...op, plane } : op)) } : o)),
+      objects: s.objects.map((o) =>
+        o.id === A || o.id === B ? { ...o, ops: o.ops.map((op) => (op.id === which ? { ...op, plane } : op)) } : o,
+      ),
     }));
   const swap = () =>
     setScene((s) => ({
@@ -141,7 +147,12 @@ export function OrderLesson() {
       ...s,
       objects: s.objects.map((o) =>
         o.id === A || o.id === B
-          ? { ...o, ops: o.ops.map((op) => (op.id === 'r1' ? { ...op, plane: parsePlane(p) } : op.id === 'r2' ? { ...op, plane: parsePlane(q) } : op)) }
+          ? {
+              ...o,
+              ops: o.ops.map((op) =>
+                op.id === 'r1' ? { ...op, plane: parsePlane(p) } : op.id === 'r2' ? { ...op, plane: parsePlane(q) } : op,
+              ),
+            }
           : o,
       ),
     }));
@@ -198,8 +209,8 @@ export function OrderLesson() {
             : `Different! ${planeName(r1.plane)} and ${planeName(r2.plane)} share the ${sharedAxis(r1.plane, r2.plane)} axis, so the order changes the result.`}
       </div>
       <p className="hint">
-        Rotations in planes with no common axis <Term k="commute">commute</Term>. In 4D two planes can be completely perpendicular (xy and zw),
-        which has no 3D counterpart.
+        Rotations in planes with no common axis <Term k="commute">commute</Term>. In 4D two planes can be completely perpendicular (xy and
+        zw), which has no 3D counterpart.
       </p>
     </div>
   );

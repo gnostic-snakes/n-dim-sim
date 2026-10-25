@@ -287,9 +287,18 @@ export class HopfRenderer {
     const f = 1 / b.tanHalfFov;
     // View matrix rows (right, up, -forward) and perspective projection, column-major.
     const view = [
-      b.right[0], b.up[0], -b.forward[0], 0,
-      b.right[1], b.up[1], -b.forward[1], 0,
-      b.right[2], b.up[2], -b.forward[2], 0,
+      b.right[0],
+      b.up[0],
+      -b.forward[0],
+      0,
+      b.right[1],
+      b.up[1],
+      -b.forward[1],
+      0,
+      b.right[2],
+      b.up[2],
+      -b.forward[2],
+      0,
       -(b.right[0] * b.eye[0] + b.right[1] * b.eye[1] + b.right[2] * b.eye[2]),
       -(b.up[0] * b.eye[0] + b.up[1] * b.eye[1] + b.up[2] * b.eye[2]),
       b.forward[0] * b.eye[0] + b.forward[1] * b.eye[1] + b.forward[2] * b.eye[2],
@@ -304,7 +313,11 @@ export class HopfRenderer {
     gl.uniformMatrix4fv(this.prog.loc('uViewProj'), false, new Float32Array(vp));
     gl.uniform1f(this.prog.loc('uThickness'), settings.thickness);
     gl.uniform3fv(this.prog.loc('uEye'), b.eye);
-    const key = norm3([-b.right[0] * 0.45 - b.forward[0] * 0.35, 1 - b.forward[1] * 0.35 - b.right[1] * 0.45, -b.right[2] * 0.45 - b.forward[2] * 0.35]);
+    const key = norm3([
+      -b.right[0] * 0.45 - b.forward[0] * 0.35,
+      1 - b.forward[1] * 0.35 - b.right[1] * 0.45,
+      -b.right[2] * 0.45 - b.forward[2] * 0.35,
+    ]);
     gl.uniform3fv(this.prog.loc('uKeyDir'), key);
     gl.uniform3fv(this.prog.loc('uFillDir'), norm3([b.right[0] * 0.8 - b.forward[0] * 0.3, -0.25, b.right[2] * 0.8 - b.forward[2] * 0.3]));
     gl.bindVertexArray(this.vao);

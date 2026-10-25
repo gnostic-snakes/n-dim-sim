@@ -9,7 +9,13 @@ describe('marching squares', () => {
   it('traces a circle as one closed loop', () => {
     const n = 80;
     const d = 4 / n;
-    const segs = marchingSquares(grid((u, v) => u * u + v * v - 1, -2, -2, d, d, n, n), -2, -2, d, d);
+    const segs = marchingSquares(
+      grid((u, v) => u * u + v * v - 1, -2, -2, d, d, n, n),
+      -2,
+      -2,
+      d,
+      d,
+    );
     expect(segs.length).toBeGreaterThan(40);
     for (const s of segs) for (const p of [s.a, s.b]) expect(Math.abs(Math.hypot(p[0], p[1]) - 1)).toBeLessThan(0.01);
     expect(countComponents(segs, 1e-9)).toBe(1);

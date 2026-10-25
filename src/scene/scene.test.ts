@@ -93,11 +93,7 @@ describe('persistence', () => {
           id: 'a',
           shape: 'hypercube',
           params: { size: 'big' },
-          ops: [
-            { kind: 'rotate', plane: [7, 7], value: 30 },
-            { kind: 'explode' },
-            { kind: 'scale', axis: 2, value: 0 },
-          ],
+          ops: [{ kind: 'rotate', plane: [7, 7], value: 30 }, { kind: 'explode' }, { kind: 'scale', axis: 2, value: 0 }],
           color: 'javascript:alert(1)',
         },
         { id: 'a', shape: 'ball', params: { r: 2 } },

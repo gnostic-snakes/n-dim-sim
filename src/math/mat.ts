@@ -144,8 +144,7 @@ export function solve(a: Mat, b: Vec): Vec | null {
 /** Largest absolute entry-wise difference. */
 export function maxAbsDiff(a: Mat, b: Mat): number {
   let d = 0;
-  for (let i = 0; i < a.length; i++)
-    for (let j = 0; j < a[i].length; j++) d = Math.max(d, Math.abs(a[i][j] - b[i][j]));
+  for (let i = 0; i < a.length; i++) for (let j = 0; j < a[i].length; j++) d = Math.max(d, Math.abs(a[i][j] - b[i][j]));
   return d;
 }
 

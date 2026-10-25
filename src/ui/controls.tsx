@@ -357,7 +357,11 @@ export function KeyButton({ path }: { path: string }) {
   const animated = useApp((s) => (s.scene.timeline.tracks[path]?.length ?? 0) > 0);
   const hereId = useApp((s) => keyAt(s.scene.timeline.tracks[path], s.time)?.id);
   const here = useApp.getState().scene.timeline.tracks[path]?.find((k) => k.id === hereId);
-  const hint = here ? 'Remove keyframe at the playhead' : animated ? 'Add a keyframe at the playhead (value is animated)' : 'Keyframe this value at the playhead';
+  const hint = here
+    ? 'Remove keyframe at the playhead'
+    : animated
+      ? 'Add a keyframe at the playhead (value is animated)'
+      : 'Keyframe this value at the playhead';
   const hintProps = useHint(hint);
   return (
     <button
@@ -426,7 +430,16 @@ export function ValueSlider({
         style={{ ['--pct' as string]: `${pct}%`, ...(color ? { ['--track-fill' as string]: color } : {}) }}
         onChange={(e) => edit(Number(e.target.value))}
       />
-      <NumberField label={label} value={value} step={step} digits={digits} suffix={suffix} min={hardMin} max={hardMax} onChange={(v) => edit(v)} />
+      <NumberField
+        label={label}
+        value={value}
+        step={step}
+        digits={digits}
+        suffix={suffix}
+        min={hardMin}
+        max={hardMax}
+        onChange={(v) => edit(v)}
+      />
       <KeyButton path={path} />
     </div>
   );

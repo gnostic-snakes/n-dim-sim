@@ -55,7 +55,10 @@ export function SliceHud() {
         ) : (
           <>Slice</>
         )}
-        <span style={{ color: 'var(--text-3)' }}> · {n === 3 ? 'Flatland' : `${n}D`} at {offsets}</span>
+        <span style={{ color: 'var(--text-3)' }}>
+          {' '}
+          · {n === 3 ? 'Flatland' : `${n}D`} at {offsets}
+        </span>
       </div>
     </div>
   );

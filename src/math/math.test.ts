@@ -87,25 +87,31 @@ describe('matrix utilities', () => {
     expect(ax[0]).toBeCloseTo(1, 12);
     expect(ax[1]).toBeCloseTo(2, 12);
     expect(ax[2]).toBeCloseTo(3, 12);
-    expect(inverse([
-      [1, 2],
-      [2, 4],
-    ])).toBeNull();
+    expect(
+      inverse([
+        [1, 2],
+        [2, 4],
+      ]),
+    ).toBeNull();
   });
 
   it('computes determinants', () => {
-    expect(determinant([
-      [0, 1],
-      [1, 0],
-    ])).toBeCloseTo(-1);
+    expect(
+      determinant([
+        [0, 1],
+        [1, 0],
+      ]),
+    ).toBeCloseTo(-1);
     expect(determinant(scaling(4, 'uniform', 2))).toBeCloseTo(16);
   });
 
   it('finds eigenvalues and singular values', () => {
-    expect(symmetricEigenvalues([
-      [2, 1],
-      [1, 2],
-    ]).map((v) => +v.toFixed(10))).toEqual([1, 3]);
+    expect(
+      symmetricEigenvalues([
+        [2, 1],
+        [1, 2],
+      ]).map((v) => +v.toFixed(10)),
+    ).toEqual([1, 3]);
     const m = multiply(rotation(4, 0, 2, 0.3), multiply(scaling(4, 1, 3), rotation(4, 1, 3, 1.1)));
     const sv = singularValues(linearPart(m));
     expect(sv.map((v) => +v.toFixed(9))).toEqual([1, 1, 1, 3]);

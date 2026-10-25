@@ -98,7 +98,13 @@ export function GhostView() {
           />
         )}
         {!ghost.sync && (
-          <IconButton icon="frame" hint="Follow the main camera again" className="btn ghost small icon" size={14} onClick={() => setGhost({ sync: true })} />
+          <IconButton
+            icon="frame"
+            hint="Follow the main camera again"
+            className="btn ghost small icon"
+            size={14}
+            onClick={() => setGhost({ sync: true })}
+          />
         )}
         <IconButton
           icon="close"

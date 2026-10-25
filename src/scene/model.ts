@@ -154,9 +154,7 @@ export const paths = {
 };
 
 export type ParsedPath =
-  | { kind: 'slice'; index: number }
-  | { kind: 'op'; objId: string; opId: string }
-  | { kind: 'param'; objId: string; key: string };
+  { kind: 'slice'; index: number } | { kind: 'op'; objId: string; opId: string } | { kind: 'param'; objId: string; key: string };
 
 export function parsePath(path: string): ParsedPath | null {
   const parts = path.split('.');

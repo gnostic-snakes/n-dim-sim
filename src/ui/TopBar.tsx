@@ -31,7 +31,9 @@ function PresetMenu({ onPick, onSpecial }: { onPick: (p: Preset) => void; onSpec
       <div className="menu-group">Special views</div>
       <button className="menu-item" role="menuitem" onClick={() => onSpecial('hopf')}>
         <span>Hopf fibration</span>
-        <span className="desc">The 3-sphere split into linked circles, seen through stereographic projection. Not a slice: a whole 4D object at once.</span>
+        <span className="desc">
+          The 3-sphere split into linked circles, seen through stereographic projection. Not a slice: a whole 4D object at once.
+        </span>
       </button>
     </div>
   );
@@ -143,7 +145,12 @@ export function toggleLesson() {
 }
 
 function slug(s?: string): string {
-  return (s || 'slice').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'slice';
+  return (
+    (s || 'slice')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'slice'
+  );
 }
 
 export function TopBar() {
@@ -262,7 +269,10 @@ export function TopBar() {
               role="menuitem"
               onClick={() => {
                 const s = useApp.getState().scene;
-                downloadBlob(new Blob([sceneToFile({ ...s, camera: engine.camera.orbit })], { type: 'application/json' }), `${slug(s.title)}.slice.json`);
+                downloadBlob(
+                  new Blob([sceneToFile({ ...s, camera: engine.camera.orbit })], { type: 'application/json' }),
+                  `${slug(s.title)}.slice.json`,
+                );
                 close();
               }}
             >

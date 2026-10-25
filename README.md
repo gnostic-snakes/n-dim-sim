@@ -37,15 +37,15 @@ A good first five minutes:
 
 The phases of the design doc, and where each lives:
 
-| Phase | Feature | Status |
-| --- | --- | --- |
-| 1. MVP | Hypersphere and tesseract, SDF slice rendering, rotate in all 6 planes, translate, scale, slice offset, orbit camera | ✅ |
-| 2. Context | Context ("ghost") inset: projection of the whole shape with the slice drawn in place, in three projections (shadow, perspective, side). Reorderable transform stack | ✅ |
-| 3. Library | All six regular 4D polytopes (5-cell, tesseract, 16-cell, 24-cell, 600-cell, 120-cell), info panels, glossary tooltips | ✅ |
-| 4. Timeline | Keyframes on every number, per-key easing, play / scrub / loop / length / speed, 21 presets | ✅ |
-| 5. Exotic shapes | Duocylinder, Clifford torus, spheritorus, torisphere, ditorus, spherinder, cubinder, hypercone, p,q-duoprisms, polyhedral prisms, Klein bottle (thickened, embedded in 4D), Hopf fibration view | ✅ |
-| 6. n-D | 4D to 8D: one slice offset per hidden axis, every rotation plane, n-cube / n-simplex / n-orthoplex / n-ball families. Flatland mode (3D shapes sliced to 2D) | ✅ |
-| 7. Output | Video export (WebM, one timeline loop), PNG export, share links, scene files | ✅ video · ❌ VR |
+| Phase            | Feature                                                                                                                                                                                         | Status           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| 1. MVP           | Hypersphere and tesseract, SDF slice rendering, rotate in all 6 planes, translate, scale, slice offset, orbit camera                                                                            | ✅               |
+| 2. Context       | Context ("ghost") inset: projection of the whole shape with the slice drawn in place, in three projections (shadow, perspective, side). Reorderable transform stack                             | ✅               |
+| 3. Library       | All six regular 4D polytopes (5-cell, tesseract, 16-cell, 24-cell, 600-cell, 120-cell), info panels, glossary tooltips                                                                          | ✅               |
+| 4. Timeline      | Keyframes on every number, per-key easing, play / scrub / loop / length / speed, 21 presets                                                                                                     | ✅               |
+| 5. Exotic shapes | Duocylinder, Clifford torus, spheritorus, torisphere, ditorus, spherinder, cubinder, hypercone, p,q-duoprisms, polyhedral prisms, Klein bottle (thickened, embedded in 4D), Hopf fibration view | ✅               |
+| 6. n-D           | 4D to 8D: one slice offset per hidden axis, every rotation plane, n-cube / n-simplex / n-orthoplex / n-ball families. Flatland mode (3D shapes sliced to 2D)                                    | ✅               |
+| 7. Output        | Video export (WebM, one timeline loop), PNG export, share links, scene files                                                                                                                    | ✅ video · ❌ VR |
 
 Not done yet: VR (WebXR), the last item of the design doc's roadmap.
 
@@ -62,8 +62,8 @@ Learning features:
 - **Order matters** lesson: two copies with the same two rotations; swap the
   order on one copy. xy & zw commute, xy & yz don't. The verdict is computed
   from the actual matrices.
-- **Shading modes**: *Cells* (each face coloured by the 4D cell it was cut
-  from), *4D tilt* (how the surface leans into the hidden direction), *Depth*
+- **Shading modes**: _Cells_ (each face coloured by the 4D cell it was cut
+  from), _4D tilt_ (how the surface leans into the hidden direction), _Depth_
   (where the point sits along w in the shape's own frame).
 - **Flatland mode** is the warm-up analogy: the same app one dimension down.
 

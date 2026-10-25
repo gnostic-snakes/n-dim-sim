@@ -17,11 +17,14 @@ export function useFrame(ms = 120): FrameData | null {
         last = now;
         setFrame(f);
       } else if (!pending) {
-        pending = setTimeout(() => {
-          pending = null;
-          last = performance.now();
-          setFrame(latest);
-        }, ms - (now - last));
+        pending = setTimeout(
+          () => {
+            pending = null;
+            last = performance.now();
+            setFrame(latest);
+          },
+          ms - (now - last),
+        );
       }
     });
     return () => {

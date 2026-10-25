@@ -10,7 +10,17 @@
  */
 import { cameraBasis, type CameraController } from './camera';
 import { createProgram, createTarget, DataTexture, deleteTarget, hexToLinear, type Program, type RenderTarget } from './gl';
-import { BLIT_FS, buildFlatShader, buildSceneShader, FULLSCREEN_VS, MAX_CURVE, MAX_PLANES, MAX_POLY, MAX_SDF, type SdfSlot } from './shaders';
+import {
+  BLIT_FS,
+  buildFlatShader,
+  buildSceneShader,
+  FULLSCREEN_VS,
+  MAX_CURVE,
+  MAX_PLANES,
+  MAX_POLY,
+  MAX_SDF,
+  type SdfSlot,
+} from './shaders';
 import type { FrameData, ObjectFrame } from '../scene/frame';
 import type { ShadingMode } from '../scene/model';
 import { exprParams } from '../math/sdf';
@@ -68,7 +78,12 @@ export class Renderer {
   private frameTimes: number[] = [];
 
   constructor(readonly canvas: HTMLCanvasElement) {
-    const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, preserveDrawingBuffer: true, powerPreference: 'high-performance' });
+    const gl = canvas.getContext('webgl2', {
+      antialias: false,
+      alpha: false,
+      preserveDrawingBuffer: true,
+      powerPreference: 'high-performance',
+    });
     if (!gl) throw new Error('WebGL2 is not available in this browser.');
     this.gl = gl;
     this.floatTargets = !!gl.getExtension('EXT_color_buffer_float');
@@ -129,7 +144,11 @@ export class Renderer {
    * Render the slice view. `cssWidth/cssHeight` is the canvas size in CSS pixels.
    * `key` must change whenever anything visible changes (it resets accumulation).
    */
-  render(frame: FrameData, camera: CameraController, opts: { cssWidth: number; cssHeight: number; dpr: number; key: string; highlight: number }) {
+  render(
+    frame: FrameData,
+    camera: CameraController,
+    opts: { cssWidth: number; cssHeight: number; dpr: number; key: string; highlight: number },
+  ) {
     const t0 = performance.now();
     const gl = this.gl;
     const fullW = Math.max(1, Math.round(opts.cssWidth * opts.dpr));
@@ -280,7 +299,8 @@ export class Renderer {
       const chunkStart = meta.length / 4;
       const segStart = chunkStart + sf.chunks.length * 2;
       for (const ch of sf.chunks) meta.push(ch.center[0], ch.center[1], ch.center[2], ch.radius, segStart + ch.start * 3, ch.count, 0, 0);
-      for (const sg of sf.segments) meta.push(sg.a[0], sg.a[1], sg.a[2], sg.hueA, sg.b[0], sg.b[1], sg.b[2], sg.hueB, sg.depthA, sg.depthB, 0, 0);
+      for (const sg of sf.segments)
+        meta.push(sg.a[0], sg.a[1], sg.a[2], sg.hueA, sg.b[0], sg.b[1], sg.b[2], sg.hueB, sg.depthA, sg.depthB, 0, 0);
       curveInfo.set([chunkStart, sf.chunks.length, 0, 0], curves * 4);
       curveParams.set([sf.tube, o.index, 0, 0], curves * 4);
       const c = hexToLinear(o.obj.color);
@@ -401,7 +421,11 @@ export interface LightRig {
 /** Camera-relative key light from above-left, so the shape always reads well as you orbit. */
 export function lightRig(camera: CameraController, frame: FrameData): LightRig {
   const b = cameraBasis(camera.orbit);
-  const dir = normalize3([-b.right[0] * 0.45 - b.forward[0] * 0.35, 1 - b.forward[1] * 0.35 - b.right[1] * 0.45, -b.right[2] * 0.45 - b.forward[2] * 0.35]);
+  const dir = normalize3([
+    -b.right[0] * 0.45 - b.forward[0] * 0.35,
+    1 - b.forward[1] * 0.35 - b.right[1] * 0.45,
+    -b.right[2] * 0.45 - b.forward[2] * 0.35,
+  ]);
   const fill = normalize3([b.right[0] * 0.8 - b.forward[0] * 0.3, -0.25, b.right[2] * 0.8 - b.forward[2] * 0.3]);
   let floorY = Infinity;
   for (const o of frame.objects) floorY = Math.min(floorY, o.center[1] - o.radius);

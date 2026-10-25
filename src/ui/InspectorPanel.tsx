@@ -4,7 +4,7 @@ import { axisName, hiddenCount, sliceDim } from '../math/axes';
 import { compileJS } from '../math/sdf';
 import type { FrameData, ObjectFrame } from '../scene/frame';
 import { paths, type ShadingMode, type ViewSettings } from '../scene/model';
-import { useApp } from '../scene/store';
+import { useApp, useValue } from '../scene/store';
 import { describeSlice } from '../shapes/classify';
 import { sdfValues } from '../shapes/registry';
 import type { SdfShapeDef } from '../shapes/types';
@@ -18,6 +18,12 @@ function sliceRange(frame: FrameData | null, j: number): number {
   let r = 2;
   for (const o of frame.objects) r = Math.max(r, Math.abs(o.center[frame.k + j] ?? 0) + o.radius);
   return Math.ceil(r * 2 + 0.25) / 2;
+}
+
+/** A value that follows the playhead (animated slice offsets included). */
+function LiveValue({ path, digits = 2 }: { path: string; digits?: number }) {
+  const v = useValue(path);
+  return <>{v === undefined ? '–' : v.toFixed(digits)}</>;
 }
 
 function SliceSection() {
@@ -36,7 +42,16 @@ function SliceSection() {
         {slice.some((v) => v !== 0) && (
           <button
             className="btn ghost small"
-            onClick={() => setScene((s) => ({ ...s, slice: s.slice.map(() => 0), timeline: { ...s.timeline, tracks: Object.fromEntries(Object.entries(s.timeline.tracks).filter(([p]) => !p.startsWith('slice.'))) } }))}
+            onClick={() =>
+              setScene((s) => ({
+                ...s,
+                slice: s.slice.map(() => 0),
+                timeline: {
+                  ...s.timeline,
+                  tracks: Object.fromEntries(Object.entries(s.timeline.tracks).filter(([p]) => !p.startsWith('slice.'))),
+                },
+              }))
+            }
           >
             Reset
           </button>
@@ -47,7 +62,7 @@ function SliceSection() {
         {Array.from({ length: h }, (_, j) => (
           <span key={j}>
             {j > 0 && (j === h - 1 ? ' and ' : ', ')}
-            <AxisLabel axis={k + j} /> = {slice[j]?.toFixed(2)}
+            <AxisLabel axis={k + j} /> = <LiveValue path={paths.slice(j)} />
           </span>
         ))}
         . Slide the <Term k="sliceOffset">offset</Term> to scan through the shape.
@@ -59,7 +74,14 @@ function SliceSection() {
             <div className="label" style={{ color: 'var(--text-2)', marginBottom: 2 }}>
               <AxisLabel axis={k + j} /> offset
             </div>
-            <ValueSlider path={paths.slice(j)} label={`${axisName(k + j)} slice offset`} min={-R} max={R} step={0.01} color={`var(--${axisName(k + j)})`} />
+            <ValueSlider
+              path={paths.slice(j)}
+              label={`${axisName(k + j)} slice offset`}
+              min={-R}
+              max={R}
+              step={0.01}
+              color={`var(--${axisName(k + j)})`}
+            />
           </div>
         );
       })}
@@ -89,7 +111,7 @@ function curvedSliceNonEmpty(o: ObjectFrame): boolean {
   for (let idx = 0; idx < total; idx++) {
     let r = idx;
     for (let d = 0; d < o.k; d++) {
-      q[d] = ball.center[d] - ball.radius + (r % steps + 0.5) * cell;
+      q[d] = ball.center[d] - ball.radius + ((r % steps) + 0.5) * cell;
       r = Math.floor(r / steps);
     }
     for (let i = 0; i < o.n; i++) {
@@ -108,7 +130,12 @@ function SliceCard({ o }: { o: ObjectFrame }) {
     if (!o.obj.visible) return { empty: true, name: 'Hidden', sub: 'This object is switched off.' };
     if (o.polytope) {
       const s = o.polytope.slice;
-      if (!s) return { empty: true, name: 'Nothing here', sub: `The slice misses it entirely. Try moving the slice offset${k === 3 ? ' or rotating into w' : ''}.` };
+      if (!s)
+        return {
+          empty: true,
+          name: 'Nothing here',
+          sub: `The slice misses it entirely. Try moving the slice offset${k === 3 ? ' or rotating into w' : ''}.`,
+        };
       if (!s.exact) return { empty: false, name: 'Slice', sub: `${s.planes.length} faces` };
       const d = describeSlice(s);
       const counts =
@@ -119,22 +146,32 @@ function SliceCard({ o }: { o: ObjectFrame }) {
     }
     if (o.def.kind === 'surface') {
       const sf = o.surface;
-      if (!sf || sf.segments.length === 0) return { empty: true, name: 'Nothing here', sub: 'The slice misses this surface. Try moving the slice offset.' };
+      if (!sf || sf.segments.length === 0)
+        return { empty: true, name: 'Nothing here', sub: 'The slice misses this surface. Try moving the slice offset.' };
       return {
         empty: false,
         name: sf.loops === 1 ? 'One closed tube' : `${sf.loops} separate tubes`,
         sub: `The surface crosses our world along ${sf.loops === 1 ? 'a single curve' : `${sf.loops} curves`}; the thin solid around it shows up as a tube.`,
       };
     }
-    if (!curvedSliceNonEmpty(o)) return { empty: true, name: 'Nothing here', sub: 'The slice misses this shape. Try moving the slice offset.' };
+    if (!curvedSliceNonEmpty(o))
+      return { empty: true, name: 'Nothing here', sub: 'The slice misses this shape. Try moving the slice offset.' };
     if (o.def.id === 'ball' && Math.abs(o.stretch[1] - o.stretch[0]) < 1e-9) {
       // A ball of radius r cut at distance d from its centre: radius sqrt(r^2 - d^2).
       const r = (o.obj.params.r ?? 1) * o.stretch[0];
       const rho = o.sliceBall?.radius ?? 0;
       const d = Math.sqrt(Math.max(0, r * r - rho * rho));
-      return { empty: false, name: k === 3 ? 'Sphere' : 'Circle', sub: `radius ${rho.toFixed(2)} = √(${r.toFixed(2)}² − ${d.toFixed(2)}²)` };
+      return {
+        empty: false,
+        name: k === 3 ? 'Sphere' : 'Circle',
+        sub: `radius ${rho.toFixed(2)} = √(${r.toFixed(2)}² − ${d.toFixed(2)}²)`,
+      };
     }
-    return { empty: false, name: 'Curved slice', sub: k === 3 ? 'A smooth 3D surface: drag to look around it.' : 'A smooth curve in Flatland.' };
+    return {
+      empty: false,
+      name: 'Curved slice',
+      sub: k === 3 ? 'A smooth 3D surface: drag to look around it.' : 'A smooth curve in Flatland.',
+    };
   }, [o, k]);
   return (
     <div className={`slice-card${info.empty ? ' empty' : ''}`}>
@@ -199,7 +236,8 @@ function ViewSection() {
   const k = useApp((s) => sliceDim(s.scene.dim));
   const setScene = useApp((s) => s.setScene);
   const setView = (patch: Partial<ViewSettings>) => setScene((s) => ({ ...s, view: { ...s.view, ...patch } }));
-  const shadingKey = view.shading === 'cells' ? 'cellShading' : view.shading === 'tilt' ? 'shading4d' : view.shading === 'depth' ? 'depthShading' : null;
+  const shadingKey =
+    view.shading === 'cells' ? 'cellShading' : view.shading === 'tilt' ? 'shading4d' : view.shading === 'depth' ? 'depthShading' : null;
   return (
     <div className="section">
       <div className="section-title">View</div>

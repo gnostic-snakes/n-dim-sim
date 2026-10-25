@@ -47,9 +47,9 @@ export function HelpDialog() {
       <h3>The pieces</h3>
       <p>
         <b>Transform stack</b> (left): rotations, translations and scales applied top to bottom. Drag rows to reorder them and watch the
-        result change. <b>Slice</b> (right): where our world sits along each hidden axis. <b>Context view</b> (bottom right): the whole shape
-        squashed into 3D, coloured blue/orange by hidden position, with the slice outlined. <b>Timeline</b> (bottom): click any ◆ to keyframe
-        a value, move the playhead, change the value, press play.
+        result change. <b>Slice</b> (right): where our world sits along each hidden axis. <b>Context view</b> (top right): the whole shape
+        squashed into 3D, coloured blue/orange by hidden position, with the slice outlined. <b>Timeline</b> (bottom): click any ◆ to
+        keyframe a value, move the playhead, change the value, press play.
       </p>
       <h3>Mouse and touch</h3>
       <p>
@@ -66,7 +66,8 @@ export function HelpDialog() {
       <p>
         Every pixel casts a ray through our 3D world. Points on the ray are lifted into n-D (with the hidden coordinates set to the slice
         offsets) and mapped back through the object’s transform. Flat-sided polytopes are cut exactly, face by face; curved shapes are
-        ray-marched using a signed distance function. Nothing in the maths assumes 4 dimensions, which is why 5D to 8D and Flatland work too.
+        ray-marched using a signed distance function. Nothing in the maths assumes 4 dimensions, which is why 5D to 8D and Flatland work
+        too.
       </p>
     </Modal>
   );

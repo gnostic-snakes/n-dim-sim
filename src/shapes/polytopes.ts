@@ -32,8 +32,7 @@ function edgesByMinDistance(vertices: Vec[], relTol = 1e-6): [number, number][] 
     for (let j = i + 1; j < vertices.length; j++) min = Math.min(min, dist(vertices[i], vertices[j]));
   const edges: [number, number][] = [];
   for (let i = 0; i < vertices.length; i++)
-    for (let j = i + 1; j < vertices.length; j++)
-      if (dist(vertices[i], vertices[j]) < min * (1 + relTol)) edges.push([i, j]);
+    for (let j = i + 1; j < vertices.length; j++) if (dist(vertices[i], vertices[j]) < min * (1 + relTol)) edges.push([i, j]);
   return edges;
 }
 
@@ -47,13 +46,7 @@ function incidence(vertices: Vec[], facets: Facet[], tol = 1e-7): number[][] {
   });
 }
 
-function finish(
-  dim: number,
-  vertices: Vec[],
-  edges: [number, number][],
-  facets: Facet[],
-  faceCounts: number[],
-): PolytopeGeometry {
+function finish(dim: number, vertices: Vec[], edges: [number, number][], facets: Facet[], faceCounts: number[]): PolytopeGeometry {
   // Normalize to unit circumradius.
   let r = 0;
   for (const v of vertices) r = Math.max(r, norm(v));
@@ -111,8 +104,7 @@ export function crossPolytope(n: number): PolytopeGeometry {
       vertices.push(v);
     }
   const edges: [number, number][] = [];
-  for (let a = 0; a < vertices.length; a++)
-    for (let b = a + 1; b < vertices.length; b++) if (a >> 1 !== b >> 1) edges.push([a, b]);
+  for (let a = 0; a < vertices.length; a++) for (let b = a + 1; b < vertices.length; b++) if (a >> 1 !== b >> 1) edges.push([a, b]);
   const facets: Facet[] = [];
   for (let m = 0; m < 1 << n; m++) {
     const normal: Vec = [];

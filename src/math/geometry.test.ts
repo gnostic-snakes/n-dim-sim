@@ -119,12 +119,14 @@ describe('convex hulls', () => {
   });
 
   it('returns null for flat input', () => {
-    expect(convexHull3([
-      [0, 0, 0],
-      [1, 0, 0],
-      [0, 1, 0],
-      [1, 1, 0],
-    ])).toBeNull();
+    expect(
+      convexHull3([
+        [0, 0, 0],
+        [1, 0, 0],
+        [0, 1, 0],
+        [1, 1, 0],
+      ]),
+    ).toBeNull();
   });
 });
 

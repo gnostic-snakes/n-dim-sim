@@ -65,7 +65,10 @@ function ObjectList() {
     }
     const obj = makeObject(shape, {
       color: OBJECT_COLORS[count % OBJECT_COLORS.length],
-      ops: [makeOp('rotate', { plane: n >= 4 ? [0, 3] : [1, 2], value: 0 }), ...(count > 0 ? [makeOp('translate', { axis: 0, value: 3.2 * count })] : [])],
+      ops: [
+        makeOp('rotate', { plane: n >= 4 ? [0, 3] : [1, 2], value: 0 }),
+        ...(count > 0 ? [makeOp('translate', { axis: 0, value: 3.2 * count })] : []),
+      ],
     });
     setScene((s) => ({ ...s, objects: [...s.objects, obj] }));
     select(obj.id);
@@ -74,7 +77,15 @@ function ObjectList() {
     <div className="section">
       <div className="section-title">
         Objects <span className="grow" />
-        <PopButton className="btn small" label={<><Icon name="plus" size={14} /> Add</>} hint="Add another shape to the scene">
+        <PopButton
+          className="btn small"
+          label={
+            <>
+              <Icon name="plus" size={14} /> Add
+            </>
+          }
+          hint="Add another shape to the scene"
+        >
           {(close) => (
             <ShapeMenu
               n={n}
@@ -99,25 +110,30 @@ function ObjectList() {
           >
             <span className="swatch" style={{ background: o.color }} />
             <span className="name">{objectName(o, n)}</span>
-            <IconButton
-              icon={o.visible ? 'eye' : 'eyeOff'}
-              hint={o.visible ? 'Hide' : 'Show'}
-              className="btn ghost small icon"
-              size={14}
-              onClick={() => setScene((s) => ({ ...s, objects: s.objects.map((x) => (x.id === o.id ? { ...x, visible: !x.visible } : x)) }))}
-            />
-            {scene.objects.length > 1 && (
+            {/* Buttons inside the row must not also select the row. */}
+            <span style={{ display: 'contents' }} onClick={(e) => e.stopPropagation()}>
               <IconButton
-                icon="trash"
-                hint="Delete object"
+                icon={o.visible ? 'eye' : 'eyeOff'}
+                hint={o.visible ? 'Hide' : 'Show'}
                 className="btn ghost small icon"
                 size={14}
-                onClick={() => {
-                  setScene((s) => ({ ...s, objects: s.objects.filter((x) => x.id !== o.id) }));
-                  if (selectedId === o.id) select(scene.objects.find((x) => x.id !== o.id)?.id ?? null);
-                }}
+                onClick={() =>
+                  setScene((s) => ({ ...s, objects: s.objects.map((x) => (x.id === o.id ? { ...x, visible: !x.visible } : x)) }))
+                }
               />
-            )}
+              {scene.objects.length > 1 && (
+                <IconButton
+                  icon="trash"
+                  hint="Delete object"
+                  className="btn ghost small icon"
+                  size={14}
+                  onClick={() => {
+                    setScene((s) => ({ ...s, objects: s.objects.filter((x) => x.id !== o.id) }));
+                    if (selectedId === o.id) select(scene.objects.find((x) => x.id !== o.id)?.id ?? null);
+                  }}
+                />
+              )}
+            </span>
           </div>
         ))}
       </div>
@@ -130,13 +146,18 @@ function ShapeEditor({ obj }: { obj: SceneObject }) {
   const setScene = useApp((s) => s.setScene);
   const def = getShape(obj.shape);
   const updateObj = (patch: Partial<SceneObject>, coalesce?: string) =>
-    setScene((s) => ({ ...s, objects: s.objects.map((o) => (o.id === obj.id ? { ...o, ...patch } : o)) }), coalesce ? { coalesce } : undefined);
+    setScene(
+      (s) => ({ ...s, objects: s.objects.map((o) => (o.id === obj.id ? { ...o, ...patch } : o)) }),
+      coalesce ? { coalesce } : undefined,
+    );
   const changeShape = (id: string) => {
     const d = getShape(id);
     setScene((s) =>
       pruneTracks({
         ...s,
-        objects: s.objects.map((o) => (o.id === obj.id ? { ...o, shape: id, params: defaultParams(d), options: defaultOptions(d), label: undefined } : o)),
+        objects: s.objects.map((o) =>
+          o.id === obj.id ? { ...o, shape: id, params: defaultParams(d), options: defaultOptions(d), label: undefined } : o,
+        ),
       }),
     );
   };

@@ -286,10 +286,7 @@ export function sliceConvexPolytope(setup: SliceSetup): SliceResult | null {
   const tv: Vec[] = new Array(T);
   for (let t = 0; t < T; t++) {
     const [u, v, w] = hull.faces[t];
-    let x = solve(
-      [planes[u].normal, planes[v].normal, planes[w].normal],
-      [planeLocalOffset[u], planeLocalOffset[v], planeLocalOffset[w]],
-    );
+    let x = solve([planes[u].normal, planes[v].normal, planes[w].normal], [planeLocalOffset[u], planeLocalOffset[v], planeLocalOffset[w]]);
     if (!x) {
       // Fall back to the polar construction from the dual triangle's plane.
       const pu = dualPts[u];

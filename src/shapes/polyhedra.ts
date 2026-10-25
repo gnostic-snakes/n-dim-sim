@@ -46,8 +46,5 @@ export function icosahedronVertices(): Vec[] {
 }
 
 export function dodecahedronVertices(): Vec[] {
-  return [
-    ...signs([1, 1, 1], [true, true, true]),
-    ...cyclic([0, 1 / PHI, PHI]).flatMap((v) => signs(v, [true, true, true])),
-  ];
+  return [...signs([1, 1, 1], [true, true, true]), ...cyclic([0, 1 / PHI, PHI]).flatMap((v) => signs(v, [true, true, true]))];
 }

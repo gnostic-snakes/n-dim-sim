@@ -180,7 +180,7 @@ export class Engine {
   private tickHopf(dt: number) {
     const ui = useUi.getState();
     const h = ui.hopf;
-    if (h.playing) ui.setHopf({ angle: (h.angle + ((dt * h.speed) * Math.PI) / 180) % (Math.PI * 2) });
+    if (h.playing) ui.setHopf({ angle: (h.angle + (dt * h.speed * Math.PI) / 180) % (Math.PI * 2) });
     this.camera.mode = 'orbit';
     const moved = this.camera.update(dt);
     const canvas = this.canvas;

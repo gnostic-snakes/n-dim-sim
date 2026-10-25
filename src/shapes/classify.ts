@@ -137,63 +137,89 @@ function namedPolyhedron(sig: Signature, regularFaces: boolean, uniformEdges: bo
   if (f === 8 && has(sig, [[3, 8]]) && v === 6) return R('Octahedron');
   if (f === 12 && has(sig, [[5, 12]]) && v === 20) return R('Dodecahedron');
   if (f === 20 && has(sig, [[3, 20]]) && v === 12) return R('Icosahedron');
-  if (has(sig, [
-    [3, 8],
-    [4, 6],
-  ]) && v === 12)
+  if (
+    has(sig, [
+      [3, 8],
+      [4, 6],
+    ]) &&
+    v === 12
+  )
     return 'Cuboctahedron';
-  if (has(sig, [
-    [3, 20],
-    [5, 12],
-  ]) && v === 30)
+  if (
+    has(sig, [
+      [3, 20],
+      [5, 12],
+    ]) &&
+    v === 30
+  )
     return 'Icosidodecahedron';
-  if (has(sig, [
-    [3, 4],
-    [6, 4],
-  ]) && v === 12)
+  if (
+    has(sig, [
+      [3, 4],
+      [6, 4],
+    ]) &&
+    v === 12
+  )
     return 'Truncated tetrahedron';
-  if (has(sig, [
-    [4, 6],
-    [6, 8],
-  ]) && v === 24)
+  if (
+    has(sig, [
+      [4, 6],
+      [6, 8],
+    ]) &&
+    v === 24
+  )
     return 'Truncated octahedron';
-  if (has(sig, [
-    [3, 8],
-    [8, 6],
-  ]) && v === 24)
+  if (
+    has(sig, [
+      [3, 8],
+      [8, 6],
+    ]) &&
+    v === 24
+  )
     return 'Truncated cube';
-  if (has(sig, [
-    [3, 8],
-    [4, 18],
-  ]) && v === 24)
+  if (
+    has(sig, [
+      [3, 8],
+      [4, 18],
+    ]) &&
+    v === 24
+  )
     return 'Rhombicuboctahedron';
-  if (has(sig, [[3, 80]]) && v === 42 && sig.degrees.get(5) === 12 && sig.degrees.get(6) === 30)
-    return 'Pentakis icosidodecahedron';
+  if (has(sig, [[3, 80]]) && v === 42 && sig.degrees.get(5) === 12 && sig.degrees.get(6) === 30) return 'Pentakis icosidodecahedron';
   if (has(sig, [[4, 12]]) && v === 14 && uniformEdges) return 'Rhombic dodecahedron';
   if (has(sig, [[4, 30]]) && v === 32 && uniformEdges) return 'Rhombic triacontahedron';
 
   // Prisms: 2 n-gons + n quadrilaterals, 2n vertices.
   for (const [k, c] of sig.sizes) {
     if (k === 4 || c !== 2) continue;
-    if (has(sig, [
-      [k, 2],
-      [4, k],
-    ]) && v === 2 * k)
+    if (
+      has(sig, [
+        [k, 2],
+        [4, k],
+      ]) &&
+      v === 2 * k
+    )
       return `${PREFIX[k] ?? `${k}-gonal`} prism`;
-    if (has(sig, [
-      [k, 2],
-      [3, 2 * k],
-    ]) && v === 2 * k)
+    if (
+      has(sig, [
+        [k, 2],
+        [3, 2 * k],
+      ]) &&
+      v === 2 * k
+    )
       return `${PREFIX[k] ?? `${k}-gonal`} antiprism`;
   }
   if (has(sig, [[4, 6]]) && v === 8) return 'Hexahedron';
   // Pyramids: 1 n-gon + n triangles.
   for (const [k, c] of sig.sizes) {
     if (k === 3 || c !== 1) continue;
-    if (has(sig, [
-      [k, 1],
-      [3, k],
-    ]) && v === k + 1)
+    if (
+      has(sig, [
+        [k, 1],
+        [3, k],
+      ]) &&
+      v === k + 1
+    )
       return `${PREFIX[k] ?? `${k}-gonal`} pyramid`;
   }
   if (has(sig, [[3, 6]]) && v === 5) return 'Triangular bipyramid';

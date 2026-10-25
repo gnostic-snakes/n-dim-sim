@@ -225,7 +225,9 @@ button {
   background: var(--panel-2);
   color: var(--text);
   white-space: nowrap;
-  transition: background 0.12s, border-color 0.12s;
+  transition:
+    background 0.12s,
+    border-color 0.12s;
 }
 .btn:hover {
   background: var(--panel-3);
@@ -543,7 +545,10 @@ button {
   display: grid;
   grid-template-columns: 18px 1fr;
   gap: 2px 6px;
-  transition: transform 0.15s ease, box-shadow 0.15s, opacity 0.15s;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s,
+    opacity 0.15s;
 }
 .op.dragging {
   z-index: 3;
@@ -642,14 +647,30 @@ button {
   font-family: var(--mono);
   font-weight: 700;
 }
-.ax-0 { color: var(--x); }
-.ax-1 { color: var(--y); }
-.ax-2 { color: var(--z); }
-.ax-3 { color: var(--w); }
-.ax-4 { color: var(--v); }
-.ax-5 { color: var(--u); }
-.ax-6 { color: var(--t); }
-.ax-7 { color: var(--s); }
+.ax-0 {
+  color: var(--x);
+}
+.ax-1 {
+  color: var(--y);
+}
+.ax-2 {
+  color: var(--z);
+}
+.ax-3 {
+  color: var(--w);
+}
+.ax-4 {
+  color: var(--v);
+}
+.ax-5 {
+  color: var(--u);
+}
+.ax-6 {
+  color: var(--t);
+}
+.ax-7 {
+  color: var(--s);
+}
 
 .add-ops {
   display: flex;

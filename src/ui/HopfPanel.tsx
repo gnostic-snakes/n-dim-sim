@@ -70,9 +70,24 @@ export function HopfControls() {
       </div>
       <div className="section">
         <div className="section-title">Fibers</div>
-        <Slider label="Latitude bands on the base sphere" value={h.bands} min={1} max={7} step={1} onChange={(v) => set({ bands: Math.round(v) })} />
+        <Slider
+          label="Latitude bands on the base sphere"
+          value={h.bands}
+          min={1}
+          max={7}
+          step={1}
+          onChange={(v) => set({ bands: Math.round(v) })}
+        />
         <Slider label="Circles per band" value={h.perBand} min={3} max={36} step={1} onChange={(v) => set({ perBand: Math.round(v) })} />
-        <Slider label="Tube thickness" value={h.thickness} min={0.005} max={0.1} step={0.001} digits={3} onChange={(v) => set({ thickness: v })} />
+        <Slider
+          label="Tube thickness"
+          value={h.thickness}
+          min={0.005}
+          max={0.1}
+          step={0.001}
+          digits={3}
+          onChange={(v) => set({ thickness: v })}
+        />
       </div>
       <div className="section">
         <div className="section-title">4D rotation</div>
@@ -91,9 +106,22 @@ export function HopfControls() {
             )}
           </PopButton>
           <span style={{ flex: 1 }} />
-          <IconButton icon={h.playing ? 'pause' : 'play'} hint={h.playing ? 'Pause' : 'Play'} className="btn primary icon" onClick={() => set({ playing: !h.playing })} />
+          <IconButton
+            icon={h.playing ? 'pause' : 'play'}
+            hint={h.playing ? 'Pause' : 'Play'}
+            className="btn primary icon"
+            onClick={() => set({ playing: !h.playing })}
+          />
         </div>
-        <Slider label="Angle" value={(h.angle * 180) / Math.PI} min={0} max={360} step={1} suffix="°" onChange={(v) => set({ angle: (v * Math.PI) / 180, playing: false })} />
+        <Slider
+          label="Angle"
+          value={(h.angle * 180) / Math.PI}
+          min={0}
+          max={360}
+          step={1}
+          suffix="°"
+          onChange={(v) => set({ angle: (v * Math.PI) / 180, playing: false })}
+        />
         <Slider label="Speed" value={h.speed} min={-90} max={90} step={1} suffix="°/s" onChange={(v) => set({ speed: v })} />
         <p className="hint">
           Rotating the 3-sphere moves the circles around, but they never pass through each other and every pair stays linked.
@@ -158,7 +186,9 @@ function BaseSphere() {
     draw();
     return () => cancelAnimationFrame(raf);
   }, [bands, perBand]);
-  return <canvas ref={ref} style={{ width: '100%', height: 170, display: 'block' }} aria-label="The base 2-sphere with one dot per circle" />;
+  return (
+    <canvas ref={ref} style={{ width: '100%', height: 170, display: 'block' }} aria-label="The base 2-sphere with one dot per circle" />
+  );
 }
 
 export function HopfInfo() {
@@ -168,20 +198,20 @@ export function HopfInfo() {
         <div className="section-title">The base sphere</div>
         <BaseSphere />
         <p className="hint">
-          Each dot on this ordinary sphere has one circle over it, in the same colour. Dots on one line of latitude give circles that
-          sweep out a torus, and the tori nest inside each other.
+          Each dot on this ordinary sphere has one circle over it, in the same colour. Dots on one line of latitude give circles that sweep
+          out a torus, and the tori nest inside each other.
         </p>
       </div>
       <div className="section">
         <div className="section-title">What am I looking at?</div>
         <div className="desc">
           <p style={{ marginTop: 0 }}>
-            The <b>3-sphere</b> is the 3D surface of a 4D ball, the boundary of the <Term k="dimension">4D</Term> hypersphere. The Hopf fibration
-            splits it completely into circles, one for every point of an ordinary 2-sphere, with no two circles touching.
+            The <b>3-sphere</b> is the 3D surface of a 4D ball, the boundary of the <Term k="dimension">4D</Term> hypersphere. The Hopf
+            fibration splits it completely into circles, one for every point of an ordinary 2-sphere, with no two circles touching.
           </p>
           <p>
-            To show it we use <b>stereographic projection</b>, the 4D version of how a flat map shows a globe: one point of the 3-sphere goes off
-            to infinity, and the rest spreads out over all of 3D space. Circles stay circles.
+            To show it we use <b>stereographic projection</b>, the 4D version of how a flat map shows a globe: one point of the 3-sphere
+            goes off to infinity, and the rest spreads out over all of 3D space. Circles stay circles.
           </p>
           <p style={{ marginBottom: 0 }}>
             Look closely: <b>every pair of circles is linked</b>, like two links of a chain. The circles over a line of latitude are the

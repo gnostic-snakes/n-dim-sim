@@ -8,17 +8,7 @@
 import { E, type Expr } from '../math/sdf';
 import { addScaled, basis, scale, type Vec } from '../math/vec';
 import { dodecahedronVertices, hullFacets3, icosahedronVertices } from './polyhedra';
-import {
-  cell120,
-  cell24,
-  cell600,
-  crossPolytope,
-  duoprism,
-  hypercube,
-  polyhedralPrism,
-  simplex,
-  type PolytopeGeometry,
-} from './polytopes';
+import { cell120, cell24, cell600, crossPolytope, duoprism, hypercube, polyhedralPrism, simplex, type PolytopeGeometry } from './polytopes';
 import type { PolytopeShapeDef, SdfShapeDef, ShapeCount, ShapeDef, ShapeParamDef, SurfaceShapeDef } from './types';
 import { axisCircle, circle, parametricGrid, sphereDirections } from './wire';
 
@@ -275,8 +265,7 @@ const prismDef: PolytopeShapeDef = {
   boundingRadius: (_n, p) => p.size,
   info: (_n, o) => ({
     counts: faceCountLabels(prismDef.geometry(4, o).faceCounts),
-    description:
-      'A 3D polyhedron extruded along the w-axis: two copies of the polyhedron (at w = ±h) joined by prisms over each face.',
+    description: 'A 3D polyhedron extruded along the w-axis: two copies of the polyhedron (at w = ±h) joined by prisms over each face.',
     funFact: 'Unrotated, every slice is just the base polyhedron. Rotate it into w and the slice starts to stretch and grow new faces.',
   }),
 };
@@ -330,8 +319,7 @@ function polyhedronGeometry(vertices: Vec[], counts: number[]): PolytopeGeometry
     for (let j = i + 1; j < vs.length; j++) edgeLen = Math.min(edgeLen, Math.hypot(...vs[i].map((x, k) => x - vs[j][k])));
   const edges: [number, number][] = [];
   for (let i = 0; i < vs.length; i++)
-    for (let j = i + 1; j < vs.length; j++)
-      if (Math.hypot(...vs[i].map((x, k) => x - vs[j][k])) < edgeLen * 1.000001) edges.push([i, j]);
+    for (let j = i + 1; j < vs.length; j++) if (Math.hypot(...vs[i].map((x, k) => x - vs[j][k])) < edgeLen * 1.000001) edges.push([i, j]);
   let inr = Infinity;
   for (const f of facets) inr = Math.min(inr, f.offset);
   return {
@@ -339,7 +327,9 @@ function polyhedronGeometry(vertices: Vec[], counts: number[]): PolytopeGeometry
     vertices: vs,
     edges,
     facets,
-    facetVertices: facets.map((f) => vs.flatMap((v, i) => (Math.abs(v[0] * f.normal[0] + v[1] * f.normal[1] + v[2] * f.normal[2] - f.offset) < 1e-7 ? [i] : []))),
+    facetVertices: facets.map((f) =>
+      vs.flatMap((v, i) => (Math.abs(v[0] * f.normal[0] + v[1] * f.normal[1] + v[2] * f.normal[2] - f.offset) < 1e-7 ? [i] : [])),
+    ),
     faceCounts: counts,
     circumradius: 1,
     inradius: inr,
@@ -492,7 +482,8 @@ const spherinderDef: SdfShapeDef = {
   },
   info: () => ({
     description: 'A ball extruded along the w-axis: the 4D version of a cylinder, with two spherical caps and a curved side.',
-    funFact: 'Unrotated, its slices are identical balls that suddenly vanish past w = ±h. Rotate it in xw and the slices become stretched capsules.',
+    funFact:
+      'Unrotated, its slices are identical balls that suddenly vanish past w = ±h. Rotate it in xw and the slices become stretched capsules.',
   }),
 };
 
@@ -682,11 +673,7 @@ const hyperconeDef: SdfShapeDef = {
   ],
   derive: (q) => coneDerived(q.r, q.h),
   // Apex at w = +h, ball of radius r at w = -h.
-  sdf: () =>
-    E.max(
-      E.sub(E.add(E.mul(E.len(x(0), x(1), x(2)), p('c')), E.mul(x(3), p('kc'))), p('khc')),
-      E.sub(E.abs(x(3)), p('h')),
-    ),
+  sdf: () => E.max(E.sub(E.add(E.mul(E.len(x(0), x(1), x(2)), p('c')), E.mul(x(3), p('kc'))), p('khc')), E.sub(E.abs(x(3)), p('h'))),
   boundingRadius: (_n, q) => Math.hypot(q.r, q.h),
   wireframe: (_n, q) => {
     const lines: Vec[][] = [];
@@ -706,8 +693,7 @@ const hyperconeDef: SdfShapeDef = {
   },
   info: () => ({
     description: 'A cone in 4D whose cross-sections are balls, shrinking from radius r at w = -h to a point at w = +h.',
-    funFact:
-      'Tilt it into w and its slices become ellipsoids, paraboloids and hyperboloids: the 3D versions of the conic sections.',
+    funFact: 'Tilt it into w and its slices become ellipsoids, paraboloids and hyperboloids: the 3D versions of the conic sections.',
   }),
 };
 
@@ -744,7 +730,8 @@ const kleinDef: SurfaceShapeDef = {
   info: () => ({
     description:
       'A closed surface with no inside or outside. In 3D a Klein bottle has to pass through itself; in 4D it does not. Here it is thickened slightly, so its slice is a thin tube around the curve where the bottle crosses our world.',
-    funFact: 'Cut a Klein bottle down the middle and it falls apart into two Möbius strips. Rotate it into w and watch the slice curve split and rejoin.',
+    funFact:
+      'Cut a Klein bottle down the middle and it falls apart into two Möbius strips. Rotate it into w and watch the slice curve split and rejoin.',
   }),
 };
 
@@ -777,7 +764,8 @@ const torus3Def: SdfShapeDef = {
     ),
   info: () => ({
     description: 'A donut: every point within distance r of a circle of radius R.',
-    funFact: 'Its flat slices can be one oval, a peanut, or two separate blobs, and at just the right tilt, two perfectly round interlocking Villarceau circles.',
+    funFact:
+      'Its flat slices can be one oval, a peanut, or two separate blobs, and at just the right tilt, two perfectly round interlocking Villarceau circles.',
   }),
 };
 
@@ -822,8 +810,7 @@ const cone3Def: SdfShapeDef = {
   ],
   derive: (q) => coneDerived(q.r, q.h),
   // Apex at y = +h, base disk at y = -h.
-  sdf: () =>
-    E.max(E.sub(E.add(E.mul(E.len(x(0), x(2)), p('c')), E.mul(x(1), p('kc'))), p('khc')), E.sub(E.abs(x(1)), p('h'))),
+  sdf: () => E.max(E.sub(E.add(E.mul(E.len(x(0), x(2)), p('c')), E.mul(x(1), p('kc'))), p('khc')), E.sub(E.abs(x(1)), p('h'))),
   boundingRadius: (_n, q) => Math.hypot(q.r, q.h),
   wireframe: (_n, q) => {
     const lines: Vec[][] = [axisCircle(3, 0, 2, q.r, [0, -q.h, 0])];
@@ -838,7 +825,8 @@ const cone3Def: SdfShapeDef = {
   },
   info: () => ({
     description: 'A circular cone with its apex pointing up the y-axis.',
-    funFact: 'Its slices are the conic sections: circles, ellipses, parabolas and hyperbolas, depending on the tilt. Rotate it in yz to see them.',
+    funFact:
+      'Its slices are the conic sections: circles, ellipses, parabolas and hyperbolas, depending on the tilt. Rotate it in yz to see them.',
   }),
 };
 
@@ -906,4 +894,3 @@ export function sdfExpr(def: SdfShapeDef, n: number, options: Record<string, num
 export function scaledFacets(g: PolytopeGeometry, size: number) {
   return g.facets.map((f) => ({ normal: f.normal, offset: f.offset * size }));
 }
-

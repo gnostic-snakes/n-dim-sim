@@ -36,7 +36,14 @@ const rot = (plane: string, value: number, id = `r_${plane}`): TransformOp => ({
   axis: 0,
   value,
 });
-const move = (axis: number, value: number, id = `t${axis}`): TransformOp => ({ id, kind: 'translate', enabled: true, plane: [0, 1], axis, value });
+const move = (axis: number, value: number, id = `t${axis}`): TransformOp => ({
+  id,
+  kind: 'translate',
+  enabled: true,
+  plane: [0, 1],
+  axis,
+  value,
+});
 const scl = (axis: number | 'all', value: number, id = `s${axis}`): TransformOp => ({
   id,
   kind: 'scale',
@@ -112,7 +119,8 @@ export const PRESETS: Preset[] = [
     id: 'tesseract-spin',
     group: 'Classics',
     title: 'Tesseract: xw spin',
-    description: 'A tesseract turning in the xw-plane. The cube you see stretches, grows new faces and returns to a cube every quarter turn.',
+    description:
+      'A tesseract turning in the xw-plane. The cube you see stretches, grows new faces and returns to a cube every quarter turn.',
     build: () =>
       scene(4, [obj('a', 'hypercube', 4, { ops: [rot('xw', 0)] })], {
         title: 'Tesseract: xw spin',
@@ -171,7 +179,8 @@ export const PRESETS: Preset[] = [
     id: 'hypersphere',
     group: 'Classics',
     title: 'A hypersphere passes by',
-    description: 'A 4D ball moving through our 3D world: a point appears, swells into a sphere and shrinks away, exactly like a sphere visiting Flatland.',
+    description:
+      'A 4D ball moving through our 3D world: a point appears, swells into a sphere and shrinks away, exactly like a sphere visiting Flatland.',
     build: () =>
       scene(4, [obj('a', 'ball', 4, { params: { r: 1.6 }, ops: [move(3, 0, 'tw')] })], {
         title: 'A hypersphere passes by',
@@ -332,7 +341,8 @@ export const PRESETS: Preset[] = [
     id: 'flat-sphere',
     group: 'Flatland',
     title: 'A sphere visits Flatland',
-    description: 'The analogy everything else builds on: a 3D sphere passing through a 2D world appears as a circle that grows and shrinks.',
+    description:
+      'The analogy everything else builds on: a 3D sphere passing through a 2D world appears as a circle that grows and shrinks.',
     build: () =>
       scene(3, [obj('a', 'ball', 3, { params: { r: 1.5 }, ops: [move(2, 0, 'tz')], color: OBJECT_COLORS[1] })], {
         title: 'A sphere visits Flatland',
@@ -345,7 +355,8 @@ export const PRESETS: Preset[] = [
     id: 'flat-cube',
     group: 'Flatland',
     title: 'Cube corner-first into Flatland',
-    description: 'A cube enters Flatland corner first: a point grows into a triangle, becomes a regular hexagon at the middle, then shrinks back.',
+    description:
+      'A cube enters Flatland corner first: a point grows into a triangle, becomes a regular hexagon at the middle, then shrinks back.',
     build: () =>
       scene(3, [obj('a', 'hypercube', 3, { params: { size: 1.8 }, ops: diagonalOps(3) })], {
         title: 'Cube corner-first into Flatland',

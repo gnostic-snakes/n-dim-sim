@@ -334,7 +334,10 @@ export function Timeline() {
                   {keys.length > 1 && (
                     <div
                       className="seg-line"
-                      style={{ left: xOf(keys[0].t, duration, width), width: xOf(keys[keys.length - 1].t, duration, width) - xOf(keys[0].t, duration, width) }}
+                      style={{
+                        left: xOf(keys[0].t, duration, width),
+                        width: xOf(keys[keys.length - 1].t, duration, width) - xOf(keys[0].t, duration, width),
+                      }}
                     />
                   )}
                   {keys.map((kf) => (

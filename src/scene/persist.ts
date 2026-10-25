@@ -46,7 +46,10 @@ function sanitizeObject(raw: unknown, dim: number): SceneObject | null {
   const options = defaultOptions(def);
   const rawOptions = isObj(raw.options) ? raw.options : {};
   for (const o of def.options ?? []) options[o.key] = int(rawOptions[o.key], o.default, o.min, o.max);
-  const ops = (Array.isArray(raw.ops) ? raw.ops : []).slice(0, 64).map((o) => sanitizeOp(o, dim)).filter((o): o is TransformOp => !!o);
+  const ops = (Array.isArray(raw.ops) ? raw.ops : [])
+    .slice(0, 64)
+    .map((o) => sanitizeOp(o, dim))
+    .filter((o): o is TransformOp => !!o);
   const color = typeof raw.color === 'string' && /^#[0-9a-fA-F]{6}$/.test(raw.color) ? raw.color : '#f2a65a';
   return {
     id: str(raw.id, newId('obj'), 40),
@@ -201,4 +204,3 @@ export function loadLocal(): Scene | null {
     return null;
   }
 }
-

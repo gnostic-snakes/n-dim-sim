@@ -91,7 +91,11 @@ function AxisPicker({ n, value, uniform, onPick }: { n: number; value: number; u
         </button>
       ))}
       {uniform && (
-        <button className={`axis-btn${value === UNIFORM ? ' active' : ''}`} onClick={() => onPick(UNIFORM)} aria-pressed={value === UNIFORM}>
+        <button
+          className={`axis-btn${value === UNIFORM ? ' active' : ''}`}
+          onClick={() => onPick(UNIFORM)}
+          aria-pressed={value === UNIFORM}
+        >
           all
         </button>
       )}
@@ -184,12 +188,7 @@ function OpRow({
           {meta.label}
         </span>
         {op.kind === 'rotate' ? (
-          <PopButton
-            className="plane-btn"
-            hint="Choose the rotation plane"
-            label={<PlaneLabel plane={op.plane} />}
-            popClass=""
-          >
+          <PopButton className="plane-btn" hint="Choose the rotation plane" label={<PlaneLabel plane={op.plane} />} popClass="">
             {(close) => (
               <PlanePicker
                 n={n}
@@ -295,7 +294,11 @@ export function TransformStack({ obj }: { obj: SceneObject }) {
       requestAnimationFrame(() => {
         const list = listRef.current;
         if (!list || !drag.current) return;
-        const idx = useApp.getState().scene.objects.find((o) => o.id === obj.id)?.ops.findIndex((o) => o.id === d.id) ?? -1;
+        const idx =
+          useApp
+            .getState()
+            .scene.objects.find((o) => o.id === obj.id)
+            ?.ops.findIndex((o) => o.id === d.id) ?? -1;
         const el = list.querySelectorAll<HTMLElement>('.op')[idx];
         if (!el) return;
         el.style.transform = '';
@@ -335,11 +338,7 @@ export function TransformStack({ obj }: { obj: SceneObject }) {
   const add = (kind: OpKind) => {
     const k = sliceDim(n);
     const init: Partial<TransformOp> =
-      kind === 'rotate'
-        ? { plane: [0, k] as Plane }
-        : kind === 'translate'
-          ? { axis: k }
-          : { axis: UNIFORM, value: 1 };
+      kind === 'rotate' ? { plane: [0, k] as Plane } : kind === 'translate' ? { axis: k } : { axis: UNIFORM, value: 1 };
     setScene((s) => ({ ...s, objects: s.objects.map((o) => (o.id === obj.id ? { ...o, ops: [...o.ops, makeOp(kind, init)] } : o)) }));
   };
 
@@ -375,8 +374,8 @@ export function TransformStack({ obj }: { obj: SceneObject }) {
         </button>
       </div>
       <p className="hint">
-        Steps run top to bottom, each measured against the fixed world axes. Rotations happen in a{' '}
-        <Term k="rotationPlane">plane</Term>, not around an axis. Drag to reorder: in higher dimensions, <Term k="commute">order matters</Term>.
+        Steps run top to bottom, each measured against the fixed world axes. Rotations happen in a <Term k="rotationPlane">plane</Term>, not
+        around an axis. Drag to reorder: in higher dimensions, <Term k="commute">order matters</Term>.
       </p>
     </div>
   );

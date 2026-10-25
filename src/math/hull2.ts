@@ -8,8 +8,7 @@ export function convexHull2(points: Vec[], eps = 1e-12): number[] | null {
   const idx = points.map((_, i) => i);
   idx.sort((a, b) => points[a][0] - points[b][0] || points[a][1] - points[b][1]);
   const cross = (o: number, a: number, b: number) =>
-    (points[a][0] - points[o][0]) * (points[b][1] - points[o][1]) -
-    (points[a][1] - points[o][1]) * (points[b][0] - points[o][0]);
+    (points[a][0] - points[o][0]) * (points[b][1] - points[o][1]) - (points[a][1] - points[o][1]) * (points[b][0] - points[o][0]);
   let scale = 0;
   for (const p of points) scale = Math.max(scale, Math.abs(p[0]), Math.abs(p[1]));
   const tol = eps * Math.max(scale * scale, 1e-300);

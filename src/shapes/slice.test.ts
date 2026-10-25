@@ -33,11 +33,7 @@ function faceSizes(s: SliceResult): number[] {
 }
 
 /** Tesseract rotated so its long diagonal (1,1,1,1) points along w. */
-const diagonalToW: TransformOpSpec[] = [
-  rot('zw', 45),
-  rot('yw', (Math.atan(1 / Math.SQRT2) * 180) / Math.PI),
-  rot('xw', 30),
-];
+const diagonalToW: TransformOpSpec[] = [rot('zw', 45), rot('yw', (Math.atan(1 / Math.SQRT2) * 180) / Math.PI), rot('xw', 30)];
 
 describe('correctness checks (design doc section 9)', () => {
   it('tesseract, no transform, slice at w = 0 -> a cube', () => {
@@ -180,7 +176,7 @@ describe('slicer details', () => {
       ops.push(rot(name, (theta * 180) / Math.PI));
       a = applyPoint(composeStack(4, [rot(name, (theta * 180) / Math.PI)]).matrix, a);
     }
-    const s = sliceOf(g, 2, ops, [dot(edgeMid, axis) / Math.hypot(...axis) * 2 * 0.0])!;
+    const s = sliceOf(g, 2, ops, [(dot(edgeMid, axis) / Math.hypot(...axis)) * 2 * 0.0])!;
     expect(describeSlice(s).name).toBe('Triangular prism');
   });
 

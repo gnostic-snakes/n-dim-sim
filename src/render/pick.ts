@@ -117,7 +117,8 @@ export function pickObject(frame: FrameData, camera: CameraController, x: number
     for (const o of frame.objects) {
       if (!o.visible) continue;
       if (o.polytope) {
-        if (o.polytope.planes.length && o.polytope.planes.every((pl) => pl.normal[0] * q[0] + pl.normal[1] * q[1] <= pl.offset)) hit = o.obj.id;
+        if (o.polytope.planes.length && o.polytope.planes.every((pl) => pl.normal[0] * q[0] + pl.normal[1] * q[1] <= pl.offset))
+          hit = o.obj.id;
       } else {
         const f = sliceSdf(o);
         if (f && f(q) <= 0) hit = o.obj.id;
