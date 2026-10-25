@@ -20,6 +20,9 @@ const CATEGORY_LABEL: Record<ShapeCategory, string> = {
 };
 const CATEGORY_ORDER: ShapeCategory[] = ['family', 'regular', 'prism', 'curved', 'flatland'];
 
+/** Keeps every scene within the renderer's per-kind limits (8 polytopes, 6 curved shapes). */
+export const MAX_OBJECTS = 6;
+
 export function objectName(obj: SceneObject, n: number): string {
   if (obj.label) return obj.label;
   const def = getShape(obj.shape);
@@ -56,6 +59,10 @@ function ObjectList() {
   const n = scene.dim;
   const add = (shape: string) => {
     const count = scene.objects.length;
+    if (count >= MAX_OBJECTS) {
+      useApp.getState().notify(`A scene can hold up to ${MAX_OBJECTS} shapes`);
+      return;
+    }
     const obj = makeObject(shape, {
       color: OBJECT_COLORS[count % OBJECT_COLORS.length],
       ops: [makeOp('rotate', { plane: n >= 4 ? [0, 3] : [1, 2], value: 0 }), ...(count > 0 ? [makeOp('translate', { axis: 0, value: 3.2 * count })] : [])],

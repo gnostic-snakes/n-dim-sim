@@ -8,6 +8,8 @@ import { describeSlice } from '../shapes/classify';
 import type { SliceResult } from '../math/slice';
 import { IconButton } from './controls';
 import { engine } from './engine';
+import { HOPF_CAMERA } from './TopBar';
+import { useUi } from './uiStore';
 import { useFrame } from './hooks';
 
 const describeCache = new WeakMap<SliceResult, string>();
@@ -225,6 +227,10 @@ export function Toast() {
 export function ViewTools() {
   const reset = () => {
     const app = useApp.getState();
+    if (useUi.getState().special === 'hopf') {
+      engine.camera.animateTo(HOPF_CAMERA);
+      return;
+    }
     engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0] });
     engine.camera.flat = { center: [0, 0], unitsPerPx: 0.012 };
     engine.requestRender();

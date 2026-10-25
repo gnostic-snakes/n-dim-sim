@@ -2,7 +2,7 @@
 import { useRef } from 'react';
 import { MAX_DIM, MIN_DIM, parsePlane } from '../math/axes';
 import { downloadBlob, recordingSupported, startRecording } from '../render/recorder';
-import { defaultScene } from '../scene/model';
+import { defaultScene, type CameraState } from '../scene/model';
 import { encodeScene, sanitizeScene, sceneToFile } from '../scene/persist';
 import { PRESETS, type Preset } from '../scene/presets';
 import { useApp } from '../scene/store';
@@ -14,7 +14,7 @@ import { useUi } from './uiStore';
 
 const GROUPS: Preset['group'][] = ['Classics', 'Polytopes', 'Curved', 'Flatland', 'Higher dimensions'];
 
-function PresetMenu({ onPick }: { onPick: (p: Preset) => void }) {
+function PresetMenu({ onPick, onSpecial }: { onPick: (p: Preset) => void; onSpecial: (s: 'hopf') => void }) {
   return (
     <div className="menu" role="menu" style={{ width: 340 }}>
       {GROUPS.map((g) => (
@@ -28,11 +28,41 @@ function PresetMenu({ onPick }: { onPick: (p: Preset) => void }) {
           ))}
         </div>
       ))}
+      <div className="menu-group">Special views</div>
+      <button className="menu-item" role="menuitem" onClick={() => onSpecial('hopf')}>
+        <span>Hopf fibration</span>
+        <span className="desc">The 3-sphere split into linked circles, seen through stereographic projection. Not a slice: a whole 4D object at once.</span>
+      </button>
     </div>
   );
 }
 
+let sliceCamera: CameraState | null = null;
+
+export function openHopf() {
+  const ui = useUi.getState();
+  if (ui.special !== 'hopf') sliceCamera = structuredClone(engine.camera.orbit);
+  ui.setLesson(null);
+  ui.setSpecial('hopf');
+  useApp.getState().setPlaying(false);
+  engine.camera.animateTo(HOPF_CAMERA);
+  engine.requestRender();
+}
+
+export const HOPF_CAMERA: CameraState = { yaw: 0.5, pitch: 0.35, distance: 14, target: [0, 0, 0] };
+
+/** Leave the Hopf view and put the slice camera back where it was. */
+export function closeSpecial() {
+  const ui = useUi.getState();
+  if (ui.special === null) return;
+  ui.setSpecial(null);
+  if (sliceCamera) engine.camera.animateTo(sliceCamera);
+  sliceCamera = null;
+  engine.requestRender();
+}
+
 export function loadPreset(p: Preset) {
+  closeSpecial();
   const app = useApp.getState();
   app.loadScene(p.build());
   app.setPlaying(true);
@@ -97,6 +127,7 @@ export function stopRecording() {
 }
 
 export function toggleLesson() {
+  closeSpecial();
   const ui = useUi.getState();
   if (ui.lesson === 'order') {
     ui.setLesson(null);
@@ -128,6 +159,7 @@ export function TopBar() {
     const app = useApp.getState();
     try {
       const scene = sanitizeScene(JSON.parse(await file.text()));
+      closeSpecial();
       app.loadScene(scene);
       app.notify(`Opened “${scene.title ?? file.name}”`);
     } catch (e) {
@@ -159,6 +191,10 @@ export function TopBar() {
               loadPreset(p);
               close();
             }}
+            onSpecial={() => {
+              openHopf();
+              close();
+            }}
           />
         )}
       </PopButton>
@@ -166,7 +202,10 @@ export function TopBar() {
         <Segmented
           label="Dimension"
           value={dim}
-          onChange={(d) => useApp.getState().setDimension(d)}
+          onChange={(d) => {
+            closeSpecial();
+            useApp.getState().setDimension(d);
+          }}
           options={dims.map((d) => ({
             value: d,
             label: d === 3 ? 'Flatland' : `${d}D`,
@@ -179,7 +218,10 @@ export function TopBar() {
         style={{ flex: 'none', height: 28, fontSize: 12 }}
         aria-label="Dimension"
         value={dim}
-        onChange={(e) => useApp.getState().setDimension(Number(e.target.value))}
+        onChange={(e) => {
+          closeSpecial();
+          useApp.getState().setDimension(Number(e.target.value));
+        }}
       >
         {dims.map((d) => (
           <option key={d} value={d}>
@@ -208,6 +250,7 @@ export function TopBar() {
               className="menu-item row-item"
               role="menuitem"
               onClick={() => {
+                closeSpecial();
                 useApp.getState().loadScene(defaultScene(useApp.getState().scene.dim));
                 close();
               }}

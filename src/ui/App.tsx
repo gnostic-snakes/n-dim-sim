@@ -6,13 +6,14 @@ import { TooltipLayer } from './controls';
 import { GlossaryDialog, HelpDialog } from './Dialogs';
 import { engine } from './engine';
 import { GhostView } from './GhostView';
+import { HopfBadge, HopfControls, HopfInfo } from './HopfPanel';
 import { useMediaQuery } from './hooks';
 import { Icon } from './icons';
 import { InspectorPanel } from './InspectorPanel';
 import { AxesGizmo, EmptyHint, ErrorBanner, ObjectLabels, SliceHud, Toast, ViewTools } from './Overlays';
 import { ScenePanel } from './ScenePanel';
 import { Timeline } from './Timeline';
-import { TopBar } from './TopBar';
+import { closeSpecial, HOPF_CAMERA, TopBar } from './TopBar';
 import { useUi } from './uiStore';
 import { Viewport } from './Viewport';
 
@@ -72,6 +73,18 @@ function useShortcuts() {
         return;
       }
       if (typing || mod || e.altKey) return;
+      const ui = useUi.getState();
+      if (ui.special === 'hopf') {
+        if (e.key === ' ' && t.tagName !== 'BUTTON') {
+          e.preventDefault();
+          ui.setHopf({ playing: !ui.hopf.playing });
+        } else if (e.key === 'Escape' && !ui.dialog) {
+          closeSpecial();
+        } else if (e.key === 'f' || e.key === 'F') {
+          engine.camera.animateTo(HOPF_CAMERA);
+        }
+        return;
+      }
       const d = app.scene.timeline.duration;
       switch (e.key) {
         case ' ':
@@ -116,6 +129,7 @@ function useShortcuts() {
 }
 
 export function App() {
+  const special = useUi((s) => s.special);
   const ghostVisible = useApp((s) => s.scene.view.ghost.visible);
   const dialog = useUi((s) => s.dialog);
   const tab = useUi((s) => s.mobileTab);
@@ -133,22 +147,28 @@ export function App() {
     <div className="app">
       <TopBar />
       <aside className={`side left${tab === 'scene' ? ' open' : ''}`} aria-label="Scene and transforms">
-        <ScenePanel />
+        {special === 'hopf' ? <HopfControls /> : <ScenePanel />}
       </aside>
       <main className="main">
         <Viewport />
-        <ObjectLabels />
-        <SliceHud />
-        <EmptyHint />
+        {special === 'hopf' ? (
+          <HopfBadge />
+        ) : (
+          <>
+            <ObjectLabels />
+            <SliceHud />
+            <EmptyHint />
+            {ghostVisible && !(mobile && tab) && <GhostView />}
+          </>
+        )}
         <AxesGizmo />
         <ViewTools />
-        {ghostVisible && !(mobile && tab) && <GhostView />}
         <ErrorBanner />
       </main>
       <aside className={`side right${tab === 'inspect' ? ' open' : ''}`} aria-label="Slice, info and view">
-        <InspectorPanel />
+        {special === 'hopf' ? <HopfInfo /> : <InspectorPanel />}
       </aside>
-      <Timeline />
+      {special !== 'hopf' && <Timeline />}
       <nav className="mobile-tabs" aria-label="Panels">
         <button className={tab === 'scene' ? 'on' : ''} onClick={() => setTab('scene')}>
           <Icon name="layers" /> <div>Shape &amp; transforms</div>

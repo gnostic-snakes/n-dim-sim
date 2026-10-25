@@ -5,11 +5,13 @@
  */
 import { CameraController, DEFAULT_CAMERA, DEFAULT_FLAT } from '../render/camera';
 import { pickObject } from '../render/pick';
+import { HopfRenderer } from '../render/hopfRenderer';
 import { Renderer } from '../render/renderer';
 import { resolveScene } from '../scene/animation';
 import { FrameCache, type FrameData } from '../scene/frame';
 import type { Scene } from '../scene/model';
 import { useApp } from '../scene/store';
+import { useUi } from './uiStore';
 
 /** Called every tick; `changed` is true when the frame was (re)rendered. */
 type Listener = (frame: FrameData, changed: boolean) => void;
@@ -17,6 +19,7 @@ type Listener = (frame: FrameData, changed: boolean) => void;
 export class Engine {
   readonly camera = new CameraController();
   renderer: Renderer | null = null;
+  hopf: HopfRenderer | null = null;
   frame: FrameData | null = null;
   error: string | null = null;
   fps = 0;
@@ -69,6 +72,8 @@ export class Engine {
     this.detach?.();
     this.renderer?.dispose();
     this.renderer = null;
+    this.hopf?.dispose();
+    this.hopf = null;
     this.canvas = null;
   }
 
@@ -104,6 +109,11 @@ export class Engine {
     const dt = Math.min(0.1, (now - this.lastNow) / 1000);
     this.lastNow = now;
     if (dt > 0) this.fps = this.fps * 0.9 + (1 / dt) * 0.1;
+
+    if (useUi.getState().special === 'hopf') {
+      this.tickHopf(dt);
+      return;
+    }
 
     const app = useApp.getState();
     if (app.playing) {
@@ -165,6 +175,32 @@ export class Engine {
 
   private lastKey = '';
   private prevChanged = false;
+
+  /** The Hopf fibration view replaces the slice view while it is open. */
+  private tickHopf(dt: number) {
+    const ui = useUi.getState();
+    const h = ui.hopf;
+    if (h.playing) ui.setHopf({ angle: (h.angle + ((dt * h.speed) * Math.PI) / 180) % (Math.PI * 2) });
+    this.camera.mode = 'orbit';
+    const moved = this.camera.update(dt);
+    const canvas = this.canvas;
+    const r = this.renderer;
+    if (!canvas || !r) return;
+    try {
+      this.hopf ??= new HopfRenderer(r.gl);
+    } catch (e) {
+      this.error = e instanceof Error ? e.message : String(e);
+      return;
+    }
+    const s = useUi.getState().hopf;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const key = `hopf|${JSON.stringify(s)}|${JSON.stringify(this.camera.orbit)}|${canvas.clientWidth}x${canvas.clientHeight}`;
+    if (moved || this.forced || key !== this.lastKey) {
+      this.hopf.render(canvas, this.camera, s, dpr);
+      this.lastKey = key;
+      this.forced = false;
+    }
+  }
 }
 
 export const engine = new Engine();
