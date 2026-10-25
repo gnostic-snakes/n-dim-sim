@@ -230,7 +230,7 @@ export function Toast() {
   );
 }
 
-/** Small toolbar in the top-right corner of the main view. */
+/** Small toolbar in the bottom-left corner of the main view, beside the axes gizmo. */
 export function ViewTools() {
   const reset = () => {
     const app = useApp.getState();
