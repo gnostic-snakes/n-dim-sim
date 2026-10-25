@@ -927,8 +927,8 @@ button {
 }
 
 .view-tools {
-  top: 10px;
-  right: 12px;
+  bottom: 14px;
+  left: 92px;
   display: flex;
   gap: 6px;
 }
@@ -948,7 +948,7 @@ button {
 .ghost-panel {
   position: absolute;
   right: 12px;
-  bottom: 12px;
+  top: 10px;
   width: 340px;
   background: rgba(14, 18, 27, 0.86);
   backdrop-filter: blur(8px);
@@ -1374,10 +1374,15 @@ kbd {
     display: initial;
   }
   .ghost-panel {
-    width: 210px;
+    width: 200px;
+    top: 52px;
   }
   .ghost-panel canvas {
-    height: 150px;
+    height: 140px;
+  }
+  .ghost-legend .bar,
+  .ghost-head .title {
+    display: none;
   }
   .tracks {
     grid-template-columns: 120px 1fr;

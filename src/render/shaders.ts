@@ -15,6 +15,7 @@ import { glslHelpers, toGLSL, type Expr } from '../math/sdf';
 export const MAX_PLANES = 1024;
 export const MAX_POLY = 8;
 export const MAX_SDF = 6;
+export const MAX_CURVE = 2;
 export const META_WIDTH = 256;
 
 export const FULLSCREEN_VS = /* glsl */ `#version 300 es
@@ -276,6 +277,13 @@ uniform int uFloor;
 uniform float uFloorY;
 uniform int uShadows;
 
+// Thickened surfaces: tubes around their slice curves, stored in uMeta as
+// chunks (bounding sphere, then segment range) followed by segments (3 texels each).
+uniform int uCurveCount;
+uniform ivec4 uCurveInfo[${MAX_CURVE}];
+uniform vec4 uCurveParams[${MAX_CURVE}];
+uniform vec4 uCurveColor[${MAX_CURVE}];
+
 ${glslHelpers(helpers)}
 ${slotCode}
 ${boundedSdf}
@@ -289,6 +297,39 @@ struct Hit {
   float tExit;
   bool inside;
 };
+
+// Ray / capsule intersection (segment pa-pb, radius r). Returns -1 on a miss.
+float capIntersect(vec3 ro, vec3 rd, vec3 pa, vec3 pb, float r) {
+  vec3 ba = pb - pa;
+  vec3 oa = ro - pa;
+  float baba = dot(ba, ba);
+  float bard = dot(ba, rd);
+  float baoa = dot(ba, oa);
+  float rdoa = dot(rd, oa);
+  float oaoa = dot(oa, oa);
+  float a = baba - bard * bard;
+  float b = baba * rdoa - baoa * bard;
+  float c = baba * oaoa - baoa * baoa - r * r * baba;
+  float h = b * b - a * c;
+  if (h >= 0.0 && a > 1e-12) {
+    float t = (-b - sqrt(h)) / a;
+    float y = baoa + t * bard;
+    if (y > 0.0 && y < baba) return t;
+  }
+  // End caps (spheres).
+  float best = -1.0;
+  for (int e = 0; e < 2; e++) {
+    vec3 oc = e == 0 ? oa : ro - pb;
+    float bb = dot(rd, oc);
+    float cc = dot(oc, oc) - r * r;
+    float hh = bb * bb - cc;
+    if (hh > 0.0) {
+      float t = -bb - sqrt(hh);
+      if (t > 0.0 && (best < 0.0 || t < best)) best = t;
+    }
+  }
+  return best;
+}
 
 bool polyIntersect(int start, int count, vec3 ro, vec3 rd, out float tIn, out float tOut, out int fIn, out int fOut) {
   tIn = -1e20; tOut = 1e20; fIn = -1; fOut = -1;
@@ -383,6 +424,52 @@ float polyFloorShadow(vec2 p) {
   return sh;
 }
 
+// Closest distance between the shadow ray (t >= 0) and segment a-b; tOut is the ray parameter there.
+float raySegDist(vec3 ro, vec3 rd, vec3 a, vec3 b, out float tOut) {
+  vec3 ba = b - a;
+  vec3 w = ro - a;
+  float d12 = dot(rd, ba);
+  float d22 = max(dot(ba, ba), 1e-12);
+  float r1 = dot(rd, w);
+  float r2 = dot(ba, w);
+  float den = d22 - d12 * d12;
+  float sp = den > 1e-9 ? clamp((r2 - r1 * d12) / den, 0.0, 1.0) : 0.0;
+  float t = max(0.0, sp * d12 - r1);
+  sp = clamp((r2 + t * d12) / d22, 0.0, 1.0);
+  t = max(0.0, sp * d12 - r1);
+  tOut = t;
+  return length(w + rd * t - ba * sp);
+}
+
+// Soft floor shadows of the surface tubes, from ray-to-segment distances (no marching).
+float curveShadow(vec3 ro, vec3 rd) {
+  float sh = 1.0;
+  for (int c = 0; c < ${MAX_CURVE}; c++) {
+    if (c >= uCurveCount) break;
+    int cs = uCurveInfo[c].x;
+    int cc = uCurveInfo[c].y;
+    float rad = uCurveParams[c].x;
+    for (int q = 0; q < cc; q++) {
+      vec4 ch = planeMeta(cs + 2 * q);
+      vec3 oc = ch.xyz - ro;
+      float tc = dot(oc, rd);
+      if (tc < -ch.w) continue;
+      if (length(oc - rd * max(tc, 0.0)) > ch.w + 0.08 * max(tc, 0.0) + 0.05) continue;
+      vec4 ci = planeMeta(cs + 2 * q + 1);
+      int ss = int(ci.x);
+      int sc = int(ci.y);
+      for (int j = 0; j < sc; j++) {
+        int base = ss + 3 * j;
+        float t;
+        float d = raySegDist(ro, rd, planeMeta(base).xyz, planeMeta(base + 1).xyz, t);
+        float pen = 0.02 + 0.06 * t;
+        sh = min(sh, smoothstep(rad - pen * 0.5, rad + pen, d));
+      }
+    }
+  }
+  return sh;
+}
+
 // Distance bound over the curved objects only (polytopes cast analytic floor shadows instead).
 float sceneSdf(vec3 p) {
   float d = 1e9;
@@ -425,6 +512,29 @@ Hit traceScene(vec3 ro, vec3 rd) {
     }
   }
 ${traceSdf}
+  for (int c = 0; c < ${MAX_CURVE}; c++) {
+    if (c >= uCurveCount) break;
+    int cs = uCurveInfo[c].x;
+    int cc = uCurveInfo[c].y;
+    float rad = uCurveParams[c].x;
+    for (int q = 0; q < cc; q++) {
+      vec4 ch = planeMeta(cs + 2 * q);
+      vec3 oc = ro - ch.xyz;
+      float b = dot(oc, rd);
+      float disc = b * b - dot(oc, oc) + ch.w * ch.w;
+      if (disc < 0.0) continue;
+      float sq = sqrt(disc);
+      if (-b + sq < 0.0 || -b - sq > h.t) continue;
+      vec4 ci = planeMeta(cs + 2 * q + 1);
+      int ss = int(ci.x);
+      int sc = int(ci.y);
+      for (int j = 0; j < sc; j++) {
+        int base = ss + 3 * j;
+        float t = capIntersect(ro, rd, planeMeta(base).xyz, planeMeta(base + 1).xyz, rad);
+        if (t > 0.0 && t < h.t) { h.t = t; h.kind = 4; h.slot = c; h.face = base; h.inside = false; }
+      }
+    }
+  }
   if (uFloor == 1 && rd.y < -1e-4) {
     float t = (uFloorY - ro.y) / rd.y;
     if (t > 0.0 && t < h.t) { h.t = t; h.kind = 3; h.slot = -1; }
@@ -475,12 +585,23 @@ void main() {
   float edgeRate = 1.0;
   float hiddenRate = 1.0;
 
-  if (h.kind == 1 || h.kind == 2) {
+  if (h.kind == 1 || h.kind == 2 || h.kind == 4) {
     vec3 pos = ro + rd * h.t;
     vec3 n;
     vec3 base;
     int obj = -1;
-    if (h.kind == 1) {
+    if (h.kind == 4) {
+      vec4 A = planeMeta(h.face);
+      vec4 B = planeMeta(h.face + 1);
+      vec4 D = planeMeta(h.face + 2);
+      vec3 ba = B.xyz - A.xyz;
+      float tau = clamp(dot(pos - A.xyz, ba) / max(dot(ba, ba), 1e-12), 0.0, 1.0);
+      n = normalize(pos - (A.xyz + ba * tau));
+      base = uCurveColor[h.slot].rgb;
+      obj = int(uCurveColor[h.slot].w);
+      if (uShading == 1) base = srgbToLinear(hsv2rgb(vec3(fract(mix(A.w, B.w, tau)), 0.62, 0.95)));
+      else if (uShading == 3) base = diverging(mix(D.x, D.y, tau));
+    } else if (h.kind == 1) {
       vec4 pl = uPlanes[h.face];
       n = h.inside ? -pl.xyz : pl.xyz;
       vec4 meta = planeMeta(h.face);
@@ -540,7 +661,10 @@ void main() {
     c = mix(c, vec3(0.55, 0.12, 0.1), ax * fade * 0.7);
     c = mix(c, vec3(0.1, 0.25, 0.6), az * fade * 0.7);
     float sh = 1.0;
-    if (uShadows == 1) sh = mix(0.45, 1.0, min(softShadow(pos + vec3(0.0, 0.002, 0.0), uKeyDir, 14.0), polyFloorShadow(pos.xz)));
+    if (uShadows == 1) {
+      vec3 sp = pos + vec3(0.0, 0.002, 0.0);
+      sh = mix(0.45, 1.0, min(min(softShadow(sp, uKeyDir, 14.0), polyFloorShadow(pos.xz)), curveShadow(sp, uKeyDir)));
+    }
     c *= sh;
     col = mix(background(rd), c, fade * 0.95 + 0.05);
   }

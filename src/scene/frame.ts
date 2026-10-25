@@ -11,7 +11,8 @@ import { composeStack, stretchRange } from '../math/transforms';
 import type { Vec } from '../math/vec';
 import { getShape, scaledFacets, sdfValues } from '../shapes/registry';
 import type { PolytopeGeometry } from '../shapes/polytopes';
-import type { ShapeDef } from '../shapes/types';
+import type { ShapeDef, SurfaceShapeDef } from '../shapes/types';
+import { sliceSurface, type SurfaceSlice } from '../math/surfaceSlice';
 import { opSpec, type Scene, type SceneObject } from './model';
 
 export interface PolytopeFrame {
@@ -46,6 +47,8 @@ export interface ObjectFrame {
   hiddenCols: Mat;
   polytope?: PolytopeFrame;
   sdf?: { values: Record<string, number>; lip: number };
+  /** Thickened surfaces: the tube-shaped slice. */
+  surface?: SurfaceSlice | null;
   /** True if something of this object is visible in the slice. */
   visible: boolean;
 }
@@ -71,7 +74,7 @@ interface SliceCacheEntry {
   key: string;
   inverse: Mat;
   hidden: number[];
-  slice: SliceResult | null;
+  slice: unknown;
 }
 
 export class FrameCache {
@@ -85,10 +88,10 @@ export class FrameCache {
     return frame;
   }
 
-  /** Exact slice, reusing last frame's result when nothing relevant changed. */
-  slice(objId: string, key: string, inverse: Mat, hidden: number[], build: () => SliceResult | null): SliceResult | null {
+  /** A per-object slice, reusing last frame's result when nothing relevant changed. */
+  slice<T>(objId: string, key: string, inverse: Mat, hidden: number[], build: () => T): T {
     const e = this.slices.get(objId);
-    if (e && e.key === key && sameMatrix(e.inverse, inverse) && sameVec(e.hidden, hidden)) return e.slice;
+    if (e && e.key === key && sameMatrix(e.inverse, inverse) && sameVec(e.hidden, hidden)) return e.slice as T;
     const slice = build();
     this.slices.set(objId, { key, inverse, hidden: hidden.slice(), slice });
     return slice;
@@ -144,6 +147,26 @@ export function computeFrame(scene: Scene, cache?: FrameCache): FrameData {
       }
       frame.polytope = { geometry, size, slice, planes: slice?.planes ?? [] };
       frame.visible = obj.visible && slice !== null;
+    } else if (def.kind === 'surface') {
+      let surface: SurfaceSlice | null = null;
+      if (sliceBall && n - k === 1) {
+        const sdef = def as SurfaceShapeDef;
+        const params = obj.params;
+        const build = () =>
+          sliceSurface({
+            point: (u, v) => sdef.point(u, v, params),
+            matrix,
+            hidden: scene.slice,
+            k,
+            grid: sdef.grid,
+            tube: (params.t ?? 0.05) * stretch[0],
+            depthScale: 1 / Math.max(1e-6, def.boundingRadius(n, params, obj.options)),
+          });
+        const key = `${obj.shape}|${JSON.stringify(params)}`;
+        surface = cache ? cache.slice(obj.id, key, inverse, scene.slice, build) : build();
+      }
+      frame.surface = surface;
+      frame.visible = obj.visible && !!surface && surface.segments.length > 0;
     } else {
       frame.sdf = { values: sdfValues(def, obj.params), lip: stretch[0] };
     }

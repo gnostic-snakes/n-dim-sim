@@ -10,7 +10,7 @@
  */
 import { cameraBasis, type CameraController } from './camera';
 import { createProgram, createTarget, DataTexture, deleteTarget, hexToLinear, type Program, type RenderTarget } from './gl';
-import { BLIT_FS, buildFlatShader, buildSceneShader, FULLSCREEN_VS, MAX_PLANES, MAX_POLY, MAX_SDF, type SdfSlot } from './shaders';
+import { BLIT_FS, buildFlatShader, buildSceneShader, FULLSCREEN_VS, MAX_CURVE, MAX_PLANES, MAX_POLY, MAX_SDF, type SdfSlot } from './shaders';
 import type { FrameData, ObjectFrame } from '../scene/frame';
 import type { ShadingMode } from '../scene/model';
 import { exprParams } from '../math/sdf';
@@ -269,6 +269,29 @@ export class Renderer {
     gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, ubo, 0, Math.max(4, count * 4));
     gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, this.ubo);
+    // Tubes around the slice curves of thickened surfaces.
+    let curves = 0;
+    const curveInfo = new Int32Array(MAX_CURVE * 4);
+    const curveParams = new Float32Array(MAX_CURVE * 4);
+    const curveColor = new Float32Array(MAX_CURVE * 4);
+    for (const o of frame.objects) {
+      const sf = o.surface;
+      if (o.def.kind !== 'surface' || !sf || !o.visible || curves >= MAX_CURVE || frame.k !== 3) continue;
+      const chunkStart = meta.length / 4;
+      const segStart = chunkStart + sf.chunks.length * 2;
+      for (const ch of sf.chunks) meta.push(ch.center[0], ch.center[1], ch.center[2], ch.radius, segStart + ch.start * 3, ch.count, 0, 0);
+      for (const sg of sf.segments) meta.push(sg.a[0], sg.a[1], sg.a[2], sg.hueA, sg.b[0], sg.b[1], sg.b[2], sg.hueB, sg.depthA, sg.depthB, 0, 0);
+      curveInfo.set([chunkStart, sf.chunks.length, 0, 0], curves * 4);
+      curveParams.set([sf.tube, o.index, 0, 0], curves * 4);
+      const c = hexToLinear(o.obj.color);
+      curveColor.set([c[0], c[1], c[2], o.index], curves * 4);
+      curves++;
+    }
+    gl.uniform1i(prog.loc('uCurveCount'), curves);
+    gl.uniform4iv(prog.loc('uCurveInfo'), curveInfo);
+    gl.uniform4fv(prog.loc('uCurveParams'), curveParams);
+    gl.uniform4fv(prog.loc('uCurveColor'), curveColor);
+
     if (this.metaData.length < meta.length) this.metaData = new Float32Array(Math.max(meta.length, this.metaData.length * 2));
     this.metaData.set(meta);
     this.meta.upload(this.metaData, Math.max(1, meta.length / 4));

@@ -43,12 +43,11 @@ The phases of the design doc, and where each lives:
 | 2. Context | Context ("ghost") inset: projection of the whole shape with the slice drawn in place, in three projections (shadow, perspective, side). Reorderable transform stack | ✅ |
 | 3. Library | All six regular 4D polytopes (5-cell, tesseract, 16-cell, 24-cell, 600-cell, 120-cell), info panels, glossary tooltips | ✅ |
 | 4. Timeline | Keyframes on every number, per-key easing, play / scrub / loop / length / speed, 21 presets | ✅ |
-| 5. Exotic shapes | Duocylinder, Clifford torus, spheritorus, torisphere, ditorus, spherinder, cubinder, hypercone, p,q-duoprisms, polyhedral prisms | ✅ |
+| 5. Exotic shapes | Duocylinder, Clifford torus, spheritorus, torisphere, ditorus, spherinder, cubinder, hypercone, p,q-duoprisms, polyhedral prisms, Klein bottle (thickened, embedded in 4D), Hopf fibration view | ✅ |
 | 6. n-D | 4D to 8D: one slice offset per hidden axis, every rotation plane, n-cube / n-simplex / n-orthoplex / n-ball families. Flatland mode (3D shapes sliced to 2D) | ✅ |
 | 7. Output | Video export (WebM, one timeline loop), PNG export, share links, scene files | ✅ video · ❌ VR |
 
-Not done yet, all marked as later or stretch goals in the design doc: VR (WebXR),
-the Klein bottle, and the Hopf fibration view.
+Not done yet: VR (WebXR), the last item of the design doc's roadmap.
 
 Learning features:
 
@@ -97,6 +96,17 @@ our 3D world, and each point on it is evaluated in shape space through that map:
   the n-D distance bound scaled by the transform's smallest singular value,
   which keeps it conservative under non-uniform scaling. A gradient check near
   the surface stops thin slices from looking fat.
+
+- **Thickened surfaces** (the Klein bottle) meet our world along a curve.
+  Marching squares on the surface's (u, v) parameter grid finds that curve
+  each frame. The pieces are chained, grouped into chunks with bounding
+  spheres, and intersected analytically as capsules, so the slice is a crisp
+  tube.
+
+The **Hopf fibration** is a separate view (Presets → Special views): the
+3-sphere split into great circles, stereographically projected into 3D,
+where every circle is exact. Instanced tubes are drawn with MSAA, and every
+pair of circles links once (a unit test checks the Gauss linking integral).
 
 ### Exact slices on the CPU
 

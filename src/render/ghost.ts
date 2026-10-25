@@ -15,7 +15,7 @@ import { applyPoint } from '../math/homogeneous';
 import type { Vec } from '../math/vec';
 import type { FrameData, ObjectFrame } from '../scene/frame';
 import type { GhostMode } from '../scene/model';
-import type { SdfShapeDef } from '../shapes/types';
+import type { SdfShapeDef, SurfaceShapeDef } from '../shapes/types';
 
 export interface GhostOptions {
   mode: GhostMode;
@@ -43,7 +43,7 @@ function wireframe(o: ObjectFrame): Vec[][] {
     const s = o.polytope.size;
     return g.edges.map(([a, b]) => [g.vertices[a].map((x) => x * s), g.vertices[b].map((x) => x * s)]);
   }
-  const def = o.def as SdfShapeDef;
+  const def = o.def as SdfShapeDef | SurfaceShapeDef;
   const key = `${def.id}|${o.n}|${JSON.stringify(o.obj.params)}|${JSON.stringify(o.obj.options)}`;
   let w = wireCache.get(key);
   if (!w) {
@@ -158,7 +158,7 @@ export class GhostRenderer {
           const hb = hid(b);
           // Split at the slice so colours change exactly where the shape crosses our world.
           const pieces: [Vec, Vec][] = [];
-          if (ha * hb < 0 && n - k === 1) {
+          if (ha * hb < 0 && n - k === 1 && o.def.kind === 'sdf') {
             const t = ha / (ha - hb);
             const m = a.map((x, j) => x + (b[j] - x) * t);
             pieces.push([a, m], [m, b]);
@@ -252,6 +252,28 @@ export class GhostRenderer {
       for (const [a, b] of sl.edges) {
         ctx.moveTo(pv[a][0], pv[a][1]);
         ctx.lineTo(pv[b][0], pv[b][1]);
+      }
+      ctx.stroke();
+    }
+
+    // Slice curves of thickened surfaces, drawn where they sit in the projection.
+    for (const o of frame.objects) {
+      const sf = o.surface;
+      if (!o.obj.visible || !sf) continue;
+      const lift = (q: Vec): Vec => {
+        const p = new Array(n).fill(0);
+        for (let i = 0; i < k; i++) p[i] = q[i];
+        for (let j = k; j < n; j++) p[j] = slice[j - k];
+        return p;
+      };
+      ctx.strokeStyle = 'rgba(255, 236, 200, 0.95)';
+      ctx.lineWidth = 2 * dpr;
+      ctx.beginPath();
+      for (const sg of sf.segments) {
+        const a = project(lift(sg.a));
+        const b = project(lift(sg.b));
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
       }
       ctx.stroke();
     }

@@ -16,6 +16,10 @@ const describeCache = new WeakMap<SliceResult, string>();
 function sliceName(o: ObjectFrame): string | null {
   const s = o.polytope?.slice;
   if (!o.obj.visible) return null;
+  if (o.def.kind === 'surface') {
+    const loops = o.surface?.segments.length ? o.surface.loops : 0;
+    return loops === 0 ? 'nothing' : loops === 1 ? 'one closed tube' : `${loops} tubes`;
+  }
   if (o.polytope) {
     if (!s) return 'nothing';
     if (!s.exact) return null;

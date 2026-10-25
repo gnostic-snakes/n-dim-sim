@@ -314,6 +314,21 @@ export const PRESETS: Preset[] = [
       }),
   },
   {
+    id: 'klein',
+    group: 'Curved',
+    title: 'Klein bottle in 4D',
+    description:
+      'A Klein bottle needs a fourth dimension to avoid crossing itself. Its slice is a tube that splits into separate loops and joins up again as the bottle turns.',
+    build: () =>
+      scene(4, [obj('a', 'klein', 4, { ops: [rot('yz', 35, 'tilt'), rot('xw', 0)], color: OBJECT_COLORS[3] })], {
+        title: 'Klein bottle in 4D',
+        duration: 16,
+        tracks: { [paths.op('a', 'r_xw')]: [k(0, 0), k(16, 360)] },
+        view: { shading: 'cells' },
+        camera: { distance: 9.5, pitch: 0.3, target: [0, -0.2, 0] },
+      }),
+  },
+  {
     id: 'flat-sphere',
     group: 'Flatland',
     title: 'A sphere visits Flatland',

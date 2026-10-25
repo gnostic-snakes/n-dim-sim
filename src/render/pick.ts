@@ -69,6 +69,45 @@ function raySdf(o: ObjectFrame, ro: number[], rd: number[]): number | null {
   return null;
 }
 
+function rayCapsule(ro: number[], rd: number[], pa: number[], pb: number[], r: number): number | null {
+  const ba = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
+  const oa = [ro[0] - pa[0], ro[1] - pa[1], ro[2] - pa[2]];
+  const d = (x: number[], y: number[]) => x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+  const baba = d(ba, ba);
+  const bard = d(ba, rd);
+  const baoa = d(ba, oa);
+  const a = baba - bard * bard;
+  const b = baba * d(rd, oa) - baoa * bard;
+  const c = baba * d(oa, oa) - baoa * baoa - r * r * baba;
+  const h = b * b - a * c;
+  if (h >= 0 && a > 1e-12) {
+    const t = (-b - Math.sqrt(h)) / a;
+    const y = baoa + t * bard;
+    if (y > 0 && y < baba) return t > 0 ? t : null;
+  }
+  let best: number | null = null;
+  for (const oc of [oa, [ro[0] - pb[0], ro[1] - pb[1], ro[2] - pb[2]]]) {
+    const bb = d(rd, oc);
+    const hh = bb * bb - (d(oc, oc) - r * r);
+    if (hh > 0) {
+      const t = -bb - Math.sqrt(hh);
+      if (t > 0 && (best === null || t < best)) best = t;
+    }
+  }
+  return best;
+}
+
+function rayCurve(o: ObjectFrame, ro: number[], rd: number[]): number | null {
+  const sf = o.surface;
+  if (!o.visible || !sf) return null;
+  let best: number | null = null;
+  for (const s of sf.segments) {
+    const t = rayCapsule(ro, rd, s.a, s.b, sf.tube);
+    if (t !== null && (best === null || t < best)) best = t;
+  }
+  return best;
+}
+
 /** Object id under the pixel (CSS px relative to the canvas), or null. */
 export function pickObject(frame: FrameData, camera: CameraController, x: number, y: number, w: number, h: number): string | null {
   if (frame.k === 2) {
@@ -97,7 +136,7 @@ export function pickObject(frame: FrameData, camera: CameraController, x: number
   let best = Infinity;
   let id: string | null = null;
   for (const o of frame.objects) {
-    const t = o.polytope ? rayPolytope(o, ro, rd) : raySdf(o, ro, rd);
+    const t = o.polytope ? rayPolytope(o, ro, rd) : o.def.kind === 'surface' ? rayCurve(o, ro, rd) : raySdf(o, ro, rd);
     if (t !== null && t < best) {
       best = t;
       id = o.obj.id;

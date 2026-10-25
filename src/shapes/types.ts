@@ -64,4 +64,17 @@ export interface SdfShapeDef extends ShapeDefBase {
   wireframe: (n: number, params: Record<string, number>, options: Record<string, number>) => Vec[][];
 }
 
-export type ShapeDef = PolytopeShapeDef | SdfShapeDef;
+/**
+ * A closed 2D surface in n-D, thickened into a solid of radius `t` (param).
+ * Its slice is a tube around the curve where the surface crosses the slice.
+ */
+export interface SurfaceShapeDef extends ShapeDefBase {
+  kind: 'surface';
+  /** Surface point for parameters (u, v) in [0, 2π]². */
+  point: (u: number, v: number, params: Record<string, number>) => Vec;
+  /** Sampling grid for finding the slice curve (u and v resolution). */
+  grid: [number, number];
+  wireframe: (n: number, params: Record<string, number>, options: Record<string, number>) => Vec[][];
+}
+
+export type ShapeDef = PolytopeShapeDef | SdfShapeDef | SurfaceShapeDef;

@@ -19,7 +19,7 @@ import {
   simplex,
   type PolytopeGeometry,
 } from './polytopes';
-import type { PolytopeShapeDef, SdfShapeDef, ShapeCount, ShapeDef, ShapeParamDef } from './types';
+import type { PolytopeShapeDef, SdfShapeDef, ShapeCount, ShapeDef, ShapeParamDef, SurfaceShapeDef } from './types';
 import { axisCircle, circle, parametricGrid, sphereDirections } from './wire';
 
 const sizeParam = (def = 2): ShapeParamDef => ({
@@ -717,6 +717,37 @@ function coneDerived(r: number, h: number): Record<string, number> {
   return { c, kc: k * c, khc: k * h * c };
 }
 
+// --- surfaces
+
+function kleinPoint(u: number, v: number, q: Record<string, number>): Vec {
+  // A Klein bottle embedded in R⁴ without self-intersection: a torus whose tube
+  // turns half a revolution in the zw-plane as it goes around.
+  const ring = q.R + q.r * Math.cos(v);
+  return [ring * Math.cos(u), ring * Math.sin(u), q.r * Math.sin(v) * Math.cos(u / 2), q.r * Math.sin(v) * Math.sin(u / 2)];
+}
+
+const kleinDef: SurfaceShapeDef = {
+  id: 'klein',
+  kind: 'surface',
+  category: 'curved',
+  dims: (n) => n === 4,
+  name: () => 'Klein bottle',
+  params: [
+    { key: 'R', label: 'Ring radius', min: 0.3, max: 3, step: 0.01, default: 1.3 },
+    { key: 'r', label: 'Tube radius', min: 0.1, max: 1.5, step: 0.01, default: 0.6 },
+    { key: 't', label: 'Thickness', min: 0.02, max: 0.3, step: 0.005, default: 0.07 },
+  ],
+  point: kleinPoint,
+  grid: [200, 100],
+  boundingRadius: (_n, q) => Math.hypot(q.R + q.r, q.r) + q.t,
+  wireframe: (_n, q) => parametricGrid((u, v) => kleinPoint(2 * Math.PI * u, 2 * Math.PI * v, q), 24, 10, 64),
+  info: () => ({
+    description:
+      'A closed surface with no inside or outside. In 3D a Klein bottle has to pass through itself; in 4D it does not. Here it is thickened slightly, so its slice is a thin tube around the curve where the bottle crosses our world.',
+    funFact: 'Cut a Klein bottle down the middle and it falls apart into two Möbius strips. Rotate it into w and watch the slice curve split and rejoin.',
+  }),
+};
+
 // --- Flatland (3D) curved shapes
 
 const torus3Def: SdfShapeDef = {
@@ -829,6 +860,7 @@ export const SHAPES: ShapeDef[] = [
   torisphereDef,
   ditorusDef,
   hyperconeDef,
+  kleinDef,
   duoprismDef,
   prismDef,
   ...platonic3D,

@@ -221,6 +221,7 @@ export function shapeForDim(shape: string, dim: number): string {
     torisphere: 'ball',
     ditorus: dim === 3 ? 'torus' : 'ball',
     hypercone: dim === 3 ? 'cone' : 'ball',
+    klein: dim === 3 ? 'torus' : 'ball',
     torus: dim === 4 ? 'spheritorus' : 'ball',
     cylinder: dim === 4 ? 'spherinder' : 'ball',
     cone: dim === 4 ? 'hypercone' : 'ball',

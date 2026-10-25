@@ -117,6 +117,15 @@ function SliceCard({ o }: { o: ObjectFrame }) {
           : `${d.counts.vertices} vertices · ${d.counts.edges} sides`;
       return { empty: false, name: d.name, sub: k === 3 ? `${counts}${d.detail ? ` (${d.detail})` : ''}` : counts };
     }
+    if (o.def.kind === 'surface') {
+      const sf = o.surface;
+      if (!sf || sf.segments.length === 0) return { empty: true, name: 'Nothing here', sub: 'The slice misses this surface. Try moving the slice offset.' };
+      return {
+        empty: false,
+        name: sf.loops === 1 ? 'One closed tube' : `${sf.loops} separate tubes`,
+        sub: `The surface crosses our world along ${sf.loops === 1 ? 'a single curve' : `${sf.loops} curves`}; the thin solid around it shows up as a tube.`,
+      };
+    }
     if (!curvedSliceNonEmpty(o)) return { empty: true, name: 'Nothing here', sub: 'The slice misses this shape. Try moving the slice offset.' };
     if (o.def.id === 'ball' && Math.abs(o.stretch[1] - o.stretch[0]) < 1e-9) {
       // A ball of radius r cut at distance d from its centre: radius sqrt(r^2 - d^2).
