@@ -36,10 +36,10 @@ export class Engine {
   private lastCameraNonce = -1;
   private forced = true;
 
-  mount(canvas: HTMLCanvasElement) {
-    this.canvas = canvas;
+  private createRenderer(canvas: HTMLCanvasElement) {
     try {
       this.renderer = new Renderer(canvas);
+      this.hopf = null;
       this.error = null;
       // Debug knobs: ?samples=1&scale=0.5 (handy on software GL).
       const q = new URLSearchParams(location.search);
@@ -49,8 +49,29 @@ export class Engine {
         this.renderer.autoScale = false;
       }
     } catch (e) {
+      this.renderer = null;
       this.error = e instanceof Error ? e.message : String(e);
     }
+    this.forced = true;
+  }
+
+  private onContextLost = (e: Event) => {
+    // Keep the context restorable; GPU resets and driver updates can drop it.
+    e.preventDefault();
+    this.renderer = null;
+    this.hopf = null;
+    this.error = 'The graphics context was lost (for example after a GPU reset). Trying to restore it…';
+  };
+
+  private onContextRestored = () => {
+    if (this.canvas) this.createRenderer(this.canvas);
+  };
+
+  mount(canvas: HTMLCanvasElement) {
+    this.canvas = canvas;
+    this.createRenderer(canvas);
+    canvas.addEventListener('webglcontextlost', this.onContextLost);
+    canvas.addEventListener('webglcontextrestored', this.onContextRestored);
     this.detach = this.camera.attach(canvas);
     this.camera.onInteract = () => this.requestRender();
     this.camera.onClick = (cx, cy) => {
@@ -69,6 +90,8 @@ export class Engine {
 
   unmount() {
     cancelAnimationFrame(this.raf);
+    this.canvas?.removeEventListener('webglcontextlost', this.onContextLost);
+    this.canvas?.removeEventListener('webglcontextrestored', this.onContextRestored);
     this.detach?.();
     this.renderer?.dispose();
     this.renderer = null;
