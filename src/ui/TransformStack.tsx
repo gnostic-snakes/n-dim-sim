@@ -109,7 +109,7 @@ function opTag(n: number, op: TransformOp): { cls: string; text: string } | null
         : { cls: 'hidden', text: 'hidden plane' };
   }
   if (op.axis === UNIFORM) return null;
-  if (isHiddenAxis(n, op.axis)) return { cls: 'mixing', text: op.kind === 'translate' ? 'moves through slice' : 'stretches in hidden axis' };
+  if (isHiddenAxis(n, op.axis)) return { cls: 'mixing', text: op.kind === 'translate' ? 'scans slice' : 'morphs slice' };
   return { cls: 'visible', text: op.kind === 'translate' ? 'moves slice' : 'stretches slice' };
 }
 

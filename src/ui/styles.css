@@ -602,6 +602,10 @@ button {
   padding: 1px 6px;
   border-radius: 10px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 0 1 auto;
 }
 .op-tag.mixing {
   color: #fbd38d;
@@ -912,6 +916,17 @@ button {
 }
 .hud-chip b {
   color: var(--text);
+}
+
+.view-tools {
+  top: 10px;
+  right: 12px;
+  display: flex;
+  gap: 6px;
+}
+.view-tools .btn {
+  background: rgba(14, 18, 27, 0.72);
+  backdrop-filter: blur(6px);
 }
 
 .axes-gizmo {
@@ -1292,7 +1307,8 @@ kbd {
 
 /* ------------------------------------------------------------------ responsive */
 
-.mobile-tabs {
+.mobile-tabs,
+.show-mobile {
   display: none;
 }
 
@@ -1345,6 +1361,9 @@ kbd {
   .brand small,
   .hide-mobile {
     display: none !important;
+  }
+  .show-mobile {
+    display: initial;
   }
   .ghost-panel {
     width: 210px;

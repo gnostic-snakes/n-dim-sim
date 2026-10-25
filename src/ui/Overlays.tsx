@@ -6,6 +6,7 @@ import type { ObjectFrame } from '../scene/frame';
 import { useApp } from '../scene/store';
 import { describeSlice } from '../shapes/classify';
 import type { SliceResult } from '../math/slice';
+import { IconButton } from './controls';
 import { engine } from './engine';
 import { useFrame } from './hooks';
 
@@ -30,9 +31,10 @@ function sliceName(o: ObjectFrame): string | null {
 export function SliceHud() {
   const frame = useFrame(100);
   const selectedId = useApp((s) => s.selectedId);
-  const n = useApp((s) => s.scene.dim);
-  const slice = useApp((s) => s.scene.slice);
   if (!frame) return null;
+  const n = frame.n;
+  // The frame holds the scene resolved at the playhead, so animated offsets show live values.
+  const slice = frame.scene.slice;
   const o = frame.objects.find((x) => x.obj.id === selectedId) ?? frame.objects[0];
   const name = o ? sliceName(o) : null;
   const k = frame.k;
@@ -197,6 +199,21 @@ export function Toast() {
   return (
     <div className="toast" role="status">
       {visible}
+    </div>
+  );
+}
+
+/** Small toolbar in the top-right corner of the main view. */
+export function ViewTools() {
+  const reset = () => {
+    const app = useApp.getState();
+    engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0] });
+    engine.camera.flat = { center: [0, 0], unitsPerPx: 0.012 };
+    engine.requestRender();
+  };
+  return (
+    <div className="overlay view-tools">
+      <IconButton icon="frame" hint="Reset the view (F)" className="btn icon" onClick={reset} />
     </div>
   );
 }

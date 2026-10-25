@@ -85,6 +85,21 @@ export function stopRecording() {
   (window as unknown as { __stopRecording?: () => void }).__stopRecording?.();
 }
 
+export function toggleLesson() {
+  const ui = useUi.getState();
+  if (ui.lesson === 'order') {
+    ui.setLesson(null);
+    return;
+  }
+  const app = useApp.getState();
+  if (!app.scene.objects.some((o) => o.id === 'lessonA')) {
+    app.setPlaying(false);
+    app.loadScene(lessonScene(parsePlane('xy'), parsePlane('yz'), 40, 55, Math.max(4, app.scene.dim)));
+  }
+  ui.setLesson('order');
+  ui.setMobileTab('scene');
+}
+
 function slug(s?: string): string {
   return (s || 'slice').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'slice';
 }
@@ -148,22 +163,20 @@ export function TopBar() {
           }))}
         />
       </div>
-      <button
-        className={`btn small hide-mobile${lesson === 'order' ? ' active' : ''}`}
-        onClick={() => {
-          const ui = useUi.getState();
-          if (lesson === 'order') {
-            ui.setLesson(null);
-            return;
-          }
-          const app = useApp.getState();
-          if (!app.scene.objects.some((o) => o.id === 'lessonA')) {
-            app.setPlaying(false);
-            app.loadScene(lessonScene(parsePlane('xy'), parsePlane('yz'), 40, 55, Math.max(4, app.scene.dim)));
-          }
-          ui.setLesson('order');
-        }}
+      <select
+        className="select show-mobile"
+        style={{ flex: 'none', height: 28, fontSize: 12 }}
+        aria-label="Dimension"
+        value={dim}
+        onChange={(e) => useApp.getState().setDimension(Number(e.target.value))}
       >
+        {dims.map((d) => (
+          <option key={d} value={d}>
+            {d === 3 ? 'Flatland' : `${d}D`}
+          </option>
+        ))}
+      </select>
+      <button className={`btn small hide-mobile${lesson === 'order' ? ' active' : ''}`} onClick={toggleLesson}>
         <Icon name="swap" size={14} /> Order matters
       </button>
       <span className="spacer" />
@@ -234,6 +247,16 @@ export function TopBar() {
               <Icon name="film" size={14} /> Record video (one loop)
             </button>
             <div className="menu-sep" />
+            <button
+              className="menu-item row-item"
+              role="menuitem"
+              onClick={() => {
+                toggleLesson();
+                close();
+              }}
+            >
+              <Icon name="swap" size={14} /> Lesson: order matters
+            </button>
             <button
               className="menu-item row-item"
               role="menuitem"

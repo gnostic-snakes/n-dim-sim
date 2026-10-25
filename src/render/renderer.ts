@@ -14,6 +14,7 @@ import { BLIT_FS, buildFlatShader, buildSceneShader, FULLSCREEN_VS, MAX_PLANES, 
 import type { FrameData, ObjectFrame } from '../scene/frame';
 import type { ShadingMode } from '../scene/model';
 import { exprParams } from '../math/sdf';
+import { convexHull2 } from '../math/hull2';
 import type { SdfShapeDef } from '../shapes/types';
 
 const SHADING_ID: Record<ShadingMode, number> = { solid: 0, cells: 1, tilt: 2, depth: 3 };
@@ -49,7 +50,7 @@ export class Renderer {
   private ubo: WebGLBuffer;
   private uboData = new Float32Array(MAX_PLANES * 4);
   private meta: DataTexture;
-  private metaData = new Float32Array(MAX_PLANES * 4);
+  private metaData = new Float32Array(MAX_PLANES * 4 * 2);
   private blit: Program;
   private compiled: Compiled | null = null;
   private target: RenderTarget | null = null;
@@ -167,9 +168,10 @@ export class Renderer {
     const prog = compiled.program;
     gl.useProgram(prog.program);
 
-    const planes = this.uploadPlanes(frame, prog);
+    const light = lightRig(camera, frame);
+    const planes = this.uploadPlanes(frame, prog, light);
     this.setSdfUniforms(frame, compiled);
-    this.setCommonUniforms(frame, camera, prog, w, h, opts);
+    this.setCommonUniforms(frame, camera, prog, w, h, opts, light);
 
     const jitter = this.sample === 0 ? [0, 0] : [halton(this.sample, 2) - 0.5, halton(this.sample, 3) - 0.5];
     gl.uniform2f(prog.loc('uJitter'), jitter[0], jitter[1]);
@@ -214,10 +216,10 @@ export class Renderer {
     else if (med < 18 && this.scale < 1) this.scale = Math.min(1, this.scale * 1.1);
   }
 
-  private uploadPlanes(frame: FrameData, prog: Program): number {
+  private uploadPlanes(frame: FrameData, prog: Program, light: LightRig): number {
     const gl = this.gl;
     const ubo = this.uboData;
-    const meta = this.metaData;
+    const meta: number[] = [];
     let count = 0;
     let slot = 0;
     const info = new Int32Array(MAX_POLY * 4);
@@ -225,6 +227,7 @@ export class Renderer {
     const color = new Float32Array(MAX_POLY * 4);
     const depth = new Float32Array(MAX_POLY * 4);
     const depthScale = new Float32Array(MAX_POLY);
+    const shadowSlots: { slot: number; o: ObjectFrame }[] = [];
     for (const o of frame.objects) {
       if (o.def.kind !== 'polytope' || !o.polytope || slot >= MAX_POLY) continue;
       const planes = o.visible ? o.polytope.planes : [];
@@ -237,13 +240,10 @@ export class Renderer {
         ubo[b + 2] = pl.normal[2] ?? 0;
         ubo[b + 3] = pl.offset;
         const hn = pl.hiddenNormal;
-        meta[b] = pl.facets[0];
-        meta[b + 1] = Math.hypot(...hn);
-        meta[b + 2] = hn[0] ?? 0;
-        meta[b + 3] = hn[1] ?? 0;
+        meta.push(pl.facets[0], Math.hypot(...hn), hn[0] ?? 0, hn[1] ?? 0);
         count++;
       }
-      info.set([start, planes.length, o.index, 0], slot * 4);
+      info.set([start, planes.length, 0, 0], slot * 4);
       const sb = o.sliceBall;
       if (sb && planes.length > 0) bound.set([sb.center[0], sb.center[1], sb.center[2] ?? 0, sb.radius * 1.002 + 1e-4], slot * 4);
       const c = hexToLinear(o.obj.color);
@@ -251,12 +251,32 @@ export class Renderer {
       const row = o.L[Math.min(o.k, o.n - 1)];
       depth.set([row[0], row[1], row[2] ?? 0, o.t0[Math.min(o.k, o.n - 1)]], slot * 4);
       depthScale[slot] = 1 / Math.max(1e-6, o.polytope.size * o.polytope.geometry.circumradius);
+      shadowSlots.push({ slot, o });
       slot++;
+    }
+    // Floor shadows of polytopes: project the exact slice along the light onto the floor.
+    for (const { slot: si, o } of shadowSlots) {
+      const sl = o.polytope?.slice;
+      if (!o.visible || !sl?.exact || frame.k !== 3 || light.dir[1] < 0.05) continue;
+      const pts = sl.vertices.map((v) => {
+        const t = (v[1] - light.floorY) / light.dir[1];
+        return [v[0] - light.dir[0] * t, v[2] - light.dir[2] * t];
+      });
+      const hull = convexHull2(pts);
+      if (!hull) continue;
+      const height = Math.max(0.05, sl.center[1] - light.floorY);
+      const start = meta.length / 4;
+      meta.push(0.04 + 0.09 * height, 0, 0, 0);
+      for (const i of hull) meta.push(pts[i][0], pts[i][1], 0, 0);
+      info[si * 4 + 2] = start;
+      info[si * 4 + 3] = hull.length;
     }
     gl.bindBuffer(gl.UNIFORM_BUFFER, this.ubo);
     gl.bufferSubData(gl.UNIFORM_BUFFER, 0, ubo, 0, Math.max(4, count * 4));
     gl.bindBufferBase(gl.UNIFORM_BUFFER, 0, this.ubo);
-    this.meta.upload(meta, Math.max(1, count));
+    if (this.metaData.length < meta.length) this.metaData = new Float32Array(Math.max(meta.length, this.metaData.length * 2));
+    this.metaData.set(meta);
+    this.meta.upload(this.metaData, Math.max(1, meta.length / 4));
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, this.meta.texture);
     gl.uniform1i(prog.loc('uMeta'), 1);
@@ -309,6 +329,7 @@ export class Renderer {
     w: number,
     h: number,
     opts: { dpr: number; highlight: number; cssHeight: number },
+    light: LightRig,
   ) {
     const gl = this.gl;
     const view = frame.scene.view;
@@ -332,14 +353,10 @@ export class Renderer {
     gl.uniform3fv(prog.loc('uFwd'), b.forward);
     gl.uniform1f(prog.loc('uTanHalfFov'), b.tanHalfFov);
     gl.uniform1f(prog.loc('uPixelAngle'), (2 * b.tanHalfFov) / h);
-    const key = normalize3([-b.right[0] * 0.45 - b.forward[0] * 0.35, 1 - b.forward[1] * 0.35 - b.right[1] * 0.45, -b.right[2] * 0.45 - b.forward[2] * 0.35]);
-    gl.uniform3fv(prog.loc('uKeyDir'), key);
-    gl.uniform3fv(prog.loc('uFillDir'), normalize3([b.right[0] * 0.8 - b.forward[0] * 0.3, -0.25, b.right[2] * 0.8 - b.forward[2] * 0.3]));
-    let floorY = Infinity;
-    for (const o of frame.objects) floorY = Math.min(floorY, o.center[1] - o.radius);
-    if (!Number.isFinite(floorY)) floorY = -2;
+    gl.uniform3fv(prog.loc('uKeyDir'), light.dir);
+    gl.uniform3fv(prog.loc('uFillDir'), light.fill);
     gl.uniform1i(prog.loc('uFloor'), view.floor ? 1 : 0);
-    gl.uniform1f(prog.loc('uFloorY'), Math.min(floorY - 0.3, -1));
+    gl.uniform1f(prog.loc('uFloorY'), light.floorY);
     gl.uniform1i(prog.loc('uShadows'), view.shadows ? 1 : 0);
   }
 
@@ -353,6 +370,25 @@ export class Renderer {
     gl.deleteBuffer(this.ubo);
     gl.deleteVertexArray(this.vao);
   }
+}
+
+export interface LightRig {
+  /** Unit vector towards the key light. */
+  dir: [number, number, number];
+  fill: [number, number, number];
+  /** Height of the floor plane: below every object's bounding ball, whatever the transform. */
+  floorY: number;
+}
+
+/** Camera-relative key light from above-left, so the shape always reads well as you orbit. */
+export function lightRig(camera: CameraController, frame: FrameData): LightRig {
+  const b = cameraBasis(camera.orbit);
+  const dir = normalize3([-b.right[0] * 0.45 - b.forward[0] * 0.35, 1 - b.forward[1] * 0.35 - b.right[1] * 0.45, -b.right[2] * 0.45 - b.forward[2] * 0.35]);
+  const fill = normalize3([b.right[0] * 0.8 - b.forward[0] * 0.3, -0.25, b.right[2] * 0.8 - b.forward[2] * 0.3]);
+  let floorY = Infinity;
+  for (const o of frame.objects) floorY = Math.min(floorY, o.center[1] - o.radius);
+  if (!Number.isFinite(floorY)) floorY = -2;
+  return { dir, fill, floorY: Math.min(floorY - 0.3, -1) };
 }
 
 function normalize3(v: [number, number, number]): [number, number, number] {

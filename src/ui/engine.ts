@@ -4,6 +4,7 @@
  * (slices, transforms) once, renders, and notifies subscribers.
  */
 import { CameraController, DEFAULT_CAMERA, DEFAULT_FLAT } from '../render/camera';
+import { pickObject } from '../render/pick';
 import { Renderer } from '../render/renderer';
 import { resolveScene } from '../scene/animation';
 import { FrameCache, type FrameData } from '../scene/frame';
@@ -51,6 +52,12 @@ export class Engine {
     }
     this.detach = this.camera.attach(canvas);
     this.camera.onInteract = () => this.requestRender();
+    this.camera.onClick = (cx, cy) => {
+      if (!this.frame || !this.canvas) return;
+      const r = this.canvas.getBoundingClientRect();
+      const id = pickObject(this.frame, this.camera, cx - r.left, cy - r.top, r.width, r.height);
+      if (id) useApp.getState().select(id);
+    };
     this.lastNow = performance.now();
     const loop = (now: number) => {
       this.raf = requestAnimationFrame(loop);

@@ -112,7 +112,9 @@ export const useApp = create<AppState>((set, get) => ({
   select: (selectedId) => set({ selectedId }),
 
   editValue: (path, v, coalesce = true) => {
-    const { time } = get();
+    const { time, playing, scene } = get();
+    // Editing an animated value keys it at the playhead; pause so the keys land where the user expects.
+    if (playing && (scene.timeline.tracks[path]?.length ?? 0) > 0) set({ playing: false });
     get().setScene((s) => editAtTime(s, path, time, v), { coalesce: coalesce ? `edit:${path}` : undefined });
   },
 

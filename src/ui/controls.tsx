@@ -335,10 +335,10 @@ export function NumberField({
 
 /** Keyframe diamond: shows whether a value is animated / keyed here; click to add or remove a key. */
 export function KeyButton({ path }: { path: string }) {
-  const keys = useApp((s) => s.scene.timeline.tracks[path]);
-  const time = useApp((s) => s.time);
-  const here = keyAt(keys, time);
-  const animated = (keys?.length ?? 0) > 0;
+  // Select only what changes the button, so it does not re-render every frame during playback.
+  const animated = useApp((s) => (s.scene.timeline.tracks[path]?.length ?? 0) > 0);
+  const hereId = useApp((s) => keyAt(s.scene.timeline.tracks[path], s.time)?.id);
+  const here = useApp.getState().scene.timeline.tracks[path]?.find((k) => k.id === hereId);
   const hint = here ? 'Remove keyframe at the playhead' : animated ? 'Add a keyframe at the playhead (value is animated)' : 'Keyframe this value at the playhead';
   const hintProps = useHint(hint);
   return (

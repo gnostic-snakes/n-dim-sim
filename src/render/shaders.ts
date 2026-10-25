@@ -69,19 +69,19 @@ vec3 cellColor(float id) {
 }
 
 // +hidden (towards +w) is warm orange, -hidden is cool blue, 0 is a soft neutral.
-const vec3 WARM = vec3(0.98, 0.42, 0.10);
-const vec3 COOL = vec3(0.10, 0.42, 0.98);
-const vec3 NEUTRAL = vec3(0.80, 0.80, 0.78);
+const vec3 WARM = vec3(0.96, 0.33, 0.05);
+const vec3 COOL = vec3(0.06, 0.32, 0.95);
+const vec3 NEUTRAL = vec3(0.62, 0.63, 0.66);
 vec3 diverging(float s) {
   s = clamp(s, -1.0, 1.0);
-  return s >= 0.0 ? mix(NEUTRAL, WARM, pow(s, 0.8)) : mix(NEUTRAL, COOL, pow(-s, 0.8));
+  return s >= 0.0 ? mix(NEUTRAL, WARM, pow(s, 0.7)) : mix(NEUTRAL, COOL, pow(-s, 0.7));
 }
 // Hidden part of the n-D normal: hue from its direction (w: warm/cool; v rotates the hue), saturation from its size.
 vec3 tiltColor(float mag, float h0, float h1) {
   float a = atan(h1, h0);
   vec3 hue = srgbToLinear(hsv2rgb(vec3(fract(0.075 - a / 6.2831853), 0.85, 0.98)));
   if (abs(h1) < 1e-4) hue = h0 >= 0.0 ? WARM : COOL;
-  return mix(NEUTRAL, hue, clamp(pow(mag, 0.75), 0.0, 1.0));
+  return mix(NEUTRAL, hue, clamp(pow(mag, 0.55) * 1.15, 0.0, 1.0));
 }
 `;
 
@@ -347,29 +347,51 @@ float planePixelRate(vec3 g, vec3 n, vec3 rd, float t) {
   return length(vec2(dot(g, qx), dot(g, qy)));
 }
 
-float polySdf(int start, int count, vec3 p) {
-  float d = -1e20;
-  for (int i = 0; i < count; i++) {
-    vec4 pl = uPlanes[start + i];
-    d = max(d, dot(pl.xyz, p) - pl.w);
+// Signed distance (on the floor, xz) to a polytope's shadow polygon. The polygon is the
+// slice's vertices projected along the light, computed on the CPU and stored in uMeta:
+// texel 0 = (penumbra, 0, 0, 0), then one vertex per texel.
+float shadowPolygon(int start, int count, vec2 p) {
+  vec2 v0 = planeMeta(start + 1).xy;
+  float d = dot(p - v0, p - v0);
+  float s = 1.0;
+  for (int i = 0; i < 128; i++) {
+    if (i >= count) break;
+    int j = i == 0 ? count - 1 : i - 1;
+    vec2 vi = planeMeta(start + 1 + i).xy;
+    vec2 vj = planeMeta(start + 1 + j).xy;
+    vec2 e = vj - vi;
+    vec2 w = p - vi;
+    vec2 b = w - e * clamp(dot(w, e) / dot(e, e), 0.0, 1.0);
+    d = min(d, dot(b, b));
+    bvec3 c = bvec3(p.y >= vi.y, p.y < vj.y, e.x * w.y > e.y * w.x);
+    if (all(c) || all(not(c))) s = -s;
   }
-  return d;
+  return s * sqrt(d);
 }
 
-float sceneSdf(vec3 p) {
-  float d = 1e9;
+float polyFloorShadow(vec2 p) {
+  float sh = 1.0;
   for (int i = 0; i < ${MAX_POLY}; i++) {
     if (i >= uPolyCount) break;
-    vec4 b = uPolyBound[i];
-    if (b.w <= 0.0) continue;
-    float db = length(p - b.xyz) - b.w;
-    d = min(d, db > 0.3 ? db : polySdf(uPolyInfo[i].x, uPolyInfo[i].y, p));
+    int start = uPolyInfo[i].z;
+    int count = uPolyInfo[i].w;
+    if (count < 3) continue;
+    float pen = planeMeta(start).x;
+    float d = shadowPolygon(start, count, p);
+    sh = min(sh, smoothstep(-pen, pen, d));
   }
+  return sh;
+}
+
+// Distance bound over the curved objects only (polytopes cast analytic floor shadows instead).
+float sceneSdf(vec3 p) {
+  float d = 1e9;
 ${sceneSdfTerms}
   return d;
 }
 
 float softShadow(vec3 ro, vec3 rd, float tMax) {
+  if (${S} == 0) return 1.0;
   float res = 1.0;
   float t = 0.02;
   for (int i = 0; i < 48; i++) {
@@ -497,7 +519,7 @@ void main() {
     }
     if (dot(n, rd) > 0.0) n = -n;
     float sh = 1.0;
-    if (uShadows == 1) sh = mix(0.35, 1.0, softShadow(pos + n * 0.004, uKeyDir, 12.0));
+    if (uShadows == 1 && h.kind == 2) sh = mix(0.35, 1.0, softShadow(pos + n * 0.004, uKeyDir, 12.0));
     col = lightSurface(base, n, rd, sh);
     if (h.inside) col *= 0.55;
     if (uHighlight >= 0 && obj == uHighlight) col += vec3(0.02, 0.025, 0.03);
@@ -518,7 +540,7 @@ void main() {
     c = mix(c, vec3(0.55, 0.12, 0.1), ax * fade * 0.7);
     c = mix(c, vec3(0.1, 0.25, 0.6), az * fade * 0.7);
     float sh = 1.0;
-    if (uShadows == 1) sh = mix(0.45, 1.0, softShadow(pos + vec3(0.0, 0.002, 0.0), uKeyDir, 14.0));
+    if (uShadows == 1) sh = mix(0.45, 1.0, min(softShadow(pos + vec3(0.0, 0.002, 0.0), uKeyDir, 14.0), polyFloorShadow(pos.xz)));
     c *= sh;
     col = mix(background(rd), c, fade * 0.95 + 0.05);
   }

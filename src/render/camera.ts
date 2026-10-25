@@ -52,6 +52,8 @@ export class CameraController {
   mode: 'orbit' | 'flat' = 'orbit';
   /** Called once per user interaction start (e.g. to cancel camera animations). */
   onInteract?: () => void;
+  /** Called for a click (press and release without dragging), in client coordinates. */
+  onClick?: (clientX: number, clientY: number) => void;
 
   private velYaw = 0;
   private velPitch = 0;
@@ -60,6 +62,7 @@ export class CameraController {
   private lastPinch = 0;
   private lastMid: { x: number; y: number } | null = null;
   private dragButton = 0;
+  private press: { x: number; y: number; moved: boolean } | null = null;
   private anim: { from: CameraState; to: CameraState; t: number; dur: number } | null = null;
   private el: HTMLElement | null = null;
 
@@ -70,6 +73,7 @@ export class CameraController {
       el.setPointerCapture(e.pointerId);
       this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
       this.dragButton = e.button === 2 || e.button === 1 || e.shiftKey ? 2 : 0;
+      this.press = this.pointers.size === 1 && e.button === 0 ? { x: e.clientX, y: e.clientY, moved: false } : null;
       this.velYaw = 0;
       this.velPitch = 0;
       this.anim = null;
@@ -83,6 +87,7 @@ export class CameraController {
       const dx = e.clientX - prev.x;
       const dy = e.clientY - prev.y;
       this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.press && Math.hypot(e.clientX - this.press.x, e.clientY - this.press.y) > 4) this.press.moved = true;
       if (this.pointers.size >= 2) {
         const pts = [...this.pointers.values()];
         const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
@@ -102,6 +107,13 @@ export class CameraController {
       }
     };
     const up = (e: PointerEvent) => {
+      const wasPress = this.press;
+      this.press = null;
+      if (wasPress && !wasPress.moved && this.pointers.size === 1 && e.type === 'pointerup') {
+        this.velYaw = 0;
+        this.velPitch = 0;
+        this.onClick?.(e.clientX, e.clientY);
+      }
       this.pointers.delete(e.pointerId);
       if (this.pointers.size < 2) {
         this.lastPinch = 0;

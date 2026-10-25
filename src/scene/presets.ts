@@ -372,7 +372,7 @@ export const PRESETS: Preset[] = [
     title: 'Penteract (5-cube)',
     description: 'A 5D cube with two hidden axes, w and v. Rotations in xw and yv each pull in a different hidden direction.',
     build: () =>
-      scene(5, [obj('a', 'hypercube', 5, { ops: [rot('xw', 0), rot('yv', 0)] })], {
+      scene(5, [obj('a', 'hypercube', 5, { ops: [rot('zw', 30, 'tilt1'), rot('xv', 20, 'tilt2'), rot('xw', 0), rot('yv', 0)] })], {
         title: 'Penteract (5-cube)',
         duration: 16,
         tracks: { [paths.op('a', 'r_xw')]: [k(0, 0), k(16, 360)], [paths.op('a', 'r_yv')]: [k(0, 0), k(16, 180)] },
