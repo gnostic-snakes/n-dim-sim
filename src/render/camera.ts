@@ -14,7 +14,7 @@ export interface CameraBasis {
   tanHalfFov: number;
 }
 
-export const DEFAULT_CAMERA: CameraState = { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0] };
+export const DEFAULT_CAMERA: CameraState = { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0] };
 export const FOV_DEG = 36;
 
 const norm = (v: V3): V3 => {

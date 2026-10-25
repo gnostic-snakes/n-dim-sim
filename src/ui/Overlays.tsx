@@ -238,13 +238,63 @@ export function ViewTools() {
       engine.camera.animateTo(HOPF_CAMERA);
       return;
     }
-    engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0] });
+    engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0] });
     engine.camera.flat = { center: [0, 0], unitsPerPx: 0.012 };
     engine.requestRender();
   };
   return (
     <div className="overlay view-tools">
       <IconButton icon="frame" hint="Reset the view (F)" className="btn icon" onClick={reset} />
+    </div>
+  );
+}
+
+const WELCOME_KEY = 'slice.welcomed.v1';
+
+/** First-visit card with three things to try. */
+export function Welcome() {
+  const [open, setOpen] = useState(() => {
+    try {
+      return localStorage.getItem(WELCOME_KEY) === null;
+    } catch {
+      return false;
+    }
+  });
+  if (!open) return null;
+  const close = () => {
+    try {
+      localStorage.setItem(WELCOME_KEY, '1');
+    } catch {
+      // best effort
+    }
+    setOpen(false);
+  };
+  return (
+    <div className="overlay welcome" role="dialog" aria-label="Welcome">
+      <div className="welcome-card">
+        <div className="row">
+          <b style={{ flex: 1 }}>Welcome to Slice</b>
+          <IconButton icon="close" hint="Dismiss" className="btn ghost small icon" size={14} onClick={close} />
+        </div>
+        <p>
+          You are watching a <b>tesseract</b> (a 4D cube) turn through our 3D world. What you see is its <b>slice</b>: the part that lies in
+          our space, the way a Flatlander would see a passing sphere as a growing and shrinking circle.
+        </p>
+        <ol>
+          <li>
+            Drag the <b>w offset</b> slider (right) to scan through the shape.
+          </li>
+          <li>
+            Add a <b>Rotate</b> step in the <b>xy</b> plane: it just spins the slice. Rotations that involve <b>w</b> make it morph.
+          </li>
+          <li>
+            Open <b>Presets</b> for the classics, or try <b>Flatland</b> for the analogy one dimension down.
+          </li>
+        </ol>
+        <button className="btn primary small" onClick={close}>
+          Got it
+        </button>
+      </div>
     </div>
   );
 }

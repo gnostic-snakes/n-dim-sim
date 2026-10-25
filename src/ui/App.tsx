@@ -10,7 +10,7 @@ import { HopfBadge, HopfControls, HopfInfo } from './HopfPanel';
 import { useMediaQuery } from './hooks';
 import { Icon } from './icons';
 import { InspectorPanel } from './InspectorPanel';
-import { AxesGizmo, EmptyHint, ErrorBanner, ObjectLabels, SliceHud, Toast, ViewTools } from './Overlays';
+import { AxesGizmo, EmptyHint, ErrorBanner, ObjectLabels, SliceHud, Toast, ViewTools, Welcome } from './Overlays';
 import { ScenePanel } from './ScenePanel';
 import { Timeline } from './Timeline';
 import { closeSpecial, HOPF_CAMERA, TopBar } from './TopBar';
@@ -108,7 +108,7 @@ function useShortcuts() {
         }
         case 'f':
         case 'F':
-          engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0] });
+          engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0] });
           break;
         case '1':
         case '2':
@@ -159,6 +159,7 @@ export function App() {
             <SliceHud />
             <EmptyHint />
             {ghostVisible && !(mobile && tab) && <GhostView />}
+            <Welcome />
           </>
         )}
         <AxesGizmo />

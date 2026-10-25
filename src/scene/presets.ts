@@ -94,7 +94,7 @@ function scene(
     objects,
     view,
     timeline: { duration: opts.duration ?? 8, loop: opts.loop ?? true, tracks: opts.tracks ?? {} },
-    camera: { yaw: 0.65, pitch: 0.38, distance: 8.5, target: [0, 0, 0], ...(opts.camera ?? {}) },
+    camera: { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0], ...(opts.camera ?? {}) },
   };
 }
 

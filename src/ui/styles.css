@@ -947,6 +947,35 @@ button {
   text-align: center;
 }
 
+.welcome {
+  left: 12px;
+  bottom: 60px;
+  width: min(360px, calc(100% - 24px));
+}
+.welcome-card {
+  background: rgba(18, 23, 34, 0.94);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(242, 166, 90, 0.4);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.welcome-card p {
+  margin: 6px 0;
+}
+.welcome-card ol {
+  margin: 6px 0 10px;
+  padding-left: 18px;
+}
+.welcome-card li + li {
+  margin-top: 4px;
+}
+.welcome-card b {
+  color: var(--text);
+}
+
 .view-tools {
   bottom: 14px;
   left: 92px;
