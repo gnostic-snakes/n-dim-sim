@@ -4,6 +4,7 @@ import { buildPreset } from '../scene/presets';
 import { useApp } from '../scene/store';
 import { TooltipLayer } from './controls';
 import { GlossaryDialog, HelpDialog } from './Dialogs';
+import { DEFAULT_CAMERA } from '../render/camera';
 import { engine } from './engine';
 import { GhostView } from './GhostView';
 import { HopfBadge, HopfControls, HopfInfo } from './HopfPanel';
@@ -108,7 +109,7 @@ function useShortcuts() {
         }
         case 'f':
         case 'F':
-          engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0] });
+          engine.camera.animateTo(app.scene.camera ?? DEFAULT_CAMERA);
           break;
         case '1':
         case '2':

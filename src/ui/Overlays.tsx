@@ -1,7 +1,7 @@
 /** Things drawn over the main view: live slice name, object labels, axes gizmo, errors, toasts. */
 import { useEffect, useRef, useState } from 'react';
 import { axisName } from '../math/axes';
-import { cameraBasis } from '../render/camera';
+import { cameraBasis, DEFAULT_CAMERA } from '../render/camera';
 import type { ObjectFrame } from '../scene/frame';
 import { useApp } from '../scene/store';
 import { describeSlice } from '../shapes/classify';
@@ -238,7 +238,7 @@ export function ViewTools() {
       engine.camera.animateTo(HOPF_CAMERA);
       return;
     }
-    engine.camera.animateTo(app.scene.camera ?? { yaw: 0.65, pitch: 0.38, distance: 9.5, target: [0, 0, 0] });
+    engine.camera.animateTo(app.scene.camera ?? DEFAULT_CAMERA);
     engine.camera.flat = { center: [0, 0], unitsPerPx: 0.012 };
     engine.requestRender();
   };
