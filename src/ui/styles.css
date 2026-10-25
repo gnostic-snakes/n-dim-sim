@@ -918,6 +918,14 @@ button {
   color: var(--text);
 }
 
+.empty-hint {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: min(420px, 80%);
+  text-align: center;
+}
+
 .view-tools {
   top: 10px;
   right: 12px;

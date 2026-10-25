@@ -32,8 +32,6 @@ export class Engine {
   private detach: (() => void) | null = null;
   private lastCameraNonce = -1;
   private forced = true;
-  /** Extra hooks run before each render (e.g. the recorder stepping time). */
-  beforeFrame: ((dt: number) => void) | null = null;
 
   mount(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -108,8 +106,7 @@ export class Engine {
     if (dt > 0) this.fps = this.fps * 0.9 + (1 / dt) * 0.1;
 
     const app = useApp.getState();
-    if (this.beforeFrame) this.beforeFrame(dt);
-    else if (app.playing) {
+    if (app.playing) {
       const { duration, loop } = app.scene.timeline;
       let t = app.time + dt * app.speed;
       if (t >= duration) {

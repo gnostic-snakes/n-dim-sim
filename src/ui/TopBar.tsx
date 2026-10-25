@@ -61,19 +61,30 @@ export function recordVideo() {
     return;
   }
   if (ui.recording) return;
-  const duration = app.scene.timeline.duration;
+  const duration = app.scene.timeline.duration / Math.max(0.05, app.speed);
+  app.setPlaying(false);
   app.setTime(0);
-  app.setPlaying(true);
   ui.setRecording(true);
   const rec = startRecording(canvas);
   app.notify(`Recording one loop (${duration.toFixed(1)} s)…`);
-  const timer = setTimeout(() => rec.stop(), (duration / Math.max(0.05, app.speed)) * 1000 + 150);
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  // Give the encoder a moment to start before the motion begins, then record one full loop.
+  const warmup = setTimeout(() => {
+    useApp.getState().setTime(0);
+    useApp.getState().setPlaying(true);
+    timer = setTimeout(() => rec.stop(), duration * 1000 + 250);
+  }, 350);
   (window as unknown as { __stopRecording?: () => void }).__stopRecording = () => {
-    clearTimeout(timer);
+    clearTimeout(warmup);
+    if (timer) clearTimeout(timer);
     rec.stop();
   };
   rec.done
     .then(({ blob, ext }) => {
+      if (blob.size === 0) {
+        useApp.getState().notify('The recording came out empty: try again with a shorter or slower animation');
+        return;
+      }
       downloadBlob(blob, `${slug(app.scene.title)}.${ext}`);
       useApp.getState().notify('Video saved');
     })

@@ -9,7 +9,7 @@ import { GhostView } from './GhostView';
 import { useMediaQuery } from './hooks';
 import { Icon } from './icons';
 import { InspectorPanel } from './InspectorPanel';
-import { AxesGizmo, ErrorBanner, ObjectLabels, SliceHud, Toast, ViewTools } from './Overlays';
+import { AxesGizmo, EmptyHint, ErrorBanner, ObjectLabels, SliceHud, Toast, ViewTools } from './Overlays';
 import { ScenePanel } from './ScenePanel';
 import { Timeline } from './Timeline';
 import { TopBar } from './TopBar';
@@ -139,6 +139,7 @@ export function App() {
         <Viewport />
         <ObjectLabels />
         <SliceHud />
+        <EmptyHint />
         <AxesGizmo />
         <ViewTools />
         {ghostVisible && !(mobile && tab) && <GhostView />}

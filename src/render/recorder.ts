@@ -5,7 +5,8 @@ export function recordingSupported(): boolean {
 }
 
 function pickMime(): string {
-  const candidates = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'];
+  // VP8 first: it is cheap enough to encode in real time on modest machines.
+  const candidates = ['video/webm;codecs=vp8', 'video/webm;codecs=vp9', 'video/webm', 'video/mp4;codecs=avc1', 'video/mp4'];
   for (const c of candidates) if (MediaRecorder.isTypeSupported(c)) return c;
   return '';
 }
@@ -18,7 +19,7 @@ export interface Recording {
 export function startRecording(canvas: HTMLCanvasElement, fps = 60): Recording {
   const stream = canvas.captureStream(fps);
   const mimeType = pickMime();
-  const rec = new MediaRecorder(stream, { mimeType: mimeType || undefined, videoBitsPerSecond: 14_000_000 });
+  const rec = new MediaRecorder(stream, { mimeType: mimeType || undefined, videoBitsPerSecond: 10_000_000 });
   const chunks: Blob[] = [];
   rec.ondataavailable = (e) => {
     if (e.data.size > 0) chunks.push(e.data);
@@ -31,7 +32,7 @@ export function startRecording(canvas: HTMLCanvasElement, fps = 60): Recording {
     };
     rec.onerror = () => reject(new Error('Recording failed'));
   });
-  rec.start(250);
+  rec.start(100);
   return {
     stop: () => {
       if (rec.state !== 'inactive') rec.stop();

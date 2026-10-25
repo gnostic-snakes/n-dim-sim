@@ -55,6 +55,24 @@ export function SliceHud() {
   );
 }
 
+/** A gentle hint in the middle of the view when the slice misses every object. */
+export function EmptyHint() {
+  const frame = useFrame(200);
+  if (!frame || frame.objects.length === 0) return null;
+  const anyVisible = frame.objects.some((o) => o.visible);
+  const anyShown = frame.objects.some((o) => o.obj.visible);
+  if (anyVisible || !anyShown) return null;
+  const axis = axisName(frame.k);
+  return (
+    <div className="overlay empty-hint">
+      <div className="hud-chip">
+        Nothing here: our {frame.k === 3 ? '3D world' : 'Flatland'} misses the shape. Move the <b>{axis} offset</b> or rotate the shape into{' '}
+        <b>{axis}</b>.
+      </div>
+    </div>
+  );
+}
+
 /** Labels above objects when the scene has more than one. */
 export function ObjectLabels() {
   const ref = useRef<HTMLDivElement>(null);

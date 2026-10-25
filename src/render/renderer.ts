@@ -94,11 +94,6 @@ export class Renderer {
     return p;
   }
 
-  /** Reset progressive accumulation (call when anything visible changes). */
-  invalidate() {
-    this.sample = 0;
-  }
-
   /** True once the still image has fully converged (no more frames needed). */
   get converged(): boolean {
     return this.sample >= this.maxSamples;
