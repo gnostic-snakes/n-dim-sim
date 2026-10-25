@@ -23,8 +23,17 @@ export function TooltipLayer() {
   const [pos, setPos] = useState<{ left: number; top: number }>({ left: -9999, top: -9999 });
   useEffect(() => {
     setGlobalTip = setTip;
+    // A hovered element can disappear (e.g. after clicking "delete") without a mouseleave,
+    // so any press, scroll or wheel dismisses the tooltip. Terms re-open theirs on click.
+    const hide = () => setTip(null);
+    window.addEventListener('pointerdown', hide, true);
+    window.addEventListener('wheel', hide, { capture: true, passive: true });
+    window.addEventListener('scroll', hide, true);
     return () => {
       setGlobalTip = null;
+      window.removeEventListener('pointerdown', hide, true);
+      window.removeEventListener('wheel', hide, true);
+      window.removeEventListener('scroll', hide, true);
     };
   }, []);
   useLayoutEffect(() => {
@@ -43,6 +52,15 @@ export function TooltipLayer() {
     </div>,
     document.body,
   );
+}
+
+/** Keyboard focus only: a mouse click also focuses buttons, and should not pop a tooltip. */
+function focusVisible(el: Element): boolean {
+  try {
+    return el.matches(':focus-visible');
+  } catch {
+    return true;
+  }
 }
 
 export function showTip(content: ReactNode, el: Element) {
@@ -68,7 +86,7 @@ export function Term({ k, children }: { k: GlossaryKey; children?: ReactNode }) 
       aria-label={`${g.term}: ${g.text}`}
       onMouseEnter={(e) => showTip(content, e.currentTarget)}
       onMouseLeave={hideTip}
-      onFocus={(e) => showTip(content, e.currentTarget)}
+      onFocus={(e) => focusVisible(e.currentTarget) && showTip(content, e.currentTarget)}
       onBlur={hideTip}
       onClick={(e) => {
         e.stopPropagation();
@@ -86,7 +104,7 @@ export function useHint(text: string) {
     'aria-label': text,
     onMouseEnter: (e: React.MouseEvent) => showTip(text, e.currentTarget),
     onMouseLeave: hideTip,
-    onFocus: (e: React.FocusEvent) => showTip(text, e.currentTarget),
+    onFocus: (e: React.FocusEvent) => focusVisible(e.currentTarget) && showTip(text, e.currentTarget),
     onBlur: hideTip,
   };
 }

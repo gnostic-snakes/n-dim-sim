@@ -32,9 +32,13 @@ export function pathLabel(scene: Scene, path: string): string {
   return `${name}${idx}. Scale ${op.axis === UNIFORM ? 'all' : axisName(op.axis)}`;
 }
 
+/** Horizontal padding (px) so keyframes at t = 0 and t = end are fully visible and easy to grab. */
+const PAD = 12;
+const xOf = (t: number, duration: number, width: number) => PAD + (t / duration) * Math.max(1, width - 2 * PAD);
+
 function tickStep(duration: number, width: number): number {
   const steps = [0.1, 0.25, 0.5, 1, 2, 5, 10, 15, 30, 60, 120];
-  for (const s of steps) if ((s / duration) * width >= 70) return s;
+  for (const s of steps) if ((s / duration) * (width - 2 * PAD) >= 70) return s;
   return steps[steps.length - 1];
 }
 
@@ -51,7 +55,7 @@ function TimeDisplay() {
 function Playhead({ width }: { width: number }) {
   const time = useApp((s) => s.time);
   const duration = useApp((s) => s.scene.timeline.duration);
-  return <div className="playhead" style={{ left: (time / duration) * width }} />;
+  return <div className="playhead" style={{ left: xOf(time, duration, width) }} />;
 }
 
 interface Selected {
@@ -159,7 +163,7 @@ export function Timeline() {
 
   const timeAt = (clientX: number) => {
     const r = areaRef.current!.getBoundingClientRect();
-    return Math.max(0, Math.min(duration, ((clientX - r.left) / r.width) * duration));
+    return Math.max(0, Math.min(duration, ((clientX - r.left - PAD) / Math.max(1, r.width - 2 * PAD)) * duration));
   };
 
   const scrub = (e: React.PointerEvent) => {
@@ -318,7 +322,7 @@ export function Timeline() {
           >
             <div className="ruler">
               {ticks.map(({ t, major }) => (
-                <div key={t.toFixed(4)} className={`tick${major ? '' : ' minor'}`} style={{ left: (t / duration) * width }}>
+                <div key={t.toFixed(4)} className={`tick${major ? '' : ' minor'}`} style={{ left: xOf(t, duration, width) }}>
                   {major ? `${+t.toFixed(2)}s` : ''}
                 </div>
               ))}
@@ -330,14 +334,14 @@ export function Timeline() {
                   {keys.length > 1 && (
                     <div
                       className="seg-line"
-                      style={{ left: (keys[0].t / duration) * width, width: ((keys[keys.length - 1].t - keys[0].t) / duration) * width }}
+                      style={{ left: xOf(keys[0].t, duration, width), width: xOf(keys[keys.length - 1].t, duration, width) - xOf(keys[0].t, duration, width) }}
                     />
                   )}
                   {keys.map((kf) => (
                     <div
                       key={kf.id}
                       className={`kf ease-${kf.ease}${sel?.id === kf.id ? ' selected' : ''}`}
-                      style={{ left: (kf.t / duration) * width }}
+                      style={{ left: xOf(kf.t, duration, width) }}
                       role="button"
                       tabIndex={0}
                       aria-label={`Keyframe at ${kf.t.toFixed(2)} s, value ${kf.v.toFixed(2)}`}
