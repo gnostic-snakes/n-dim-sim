@@ -999,7 +999,9 @@ button {
   position: absolute;
   right: 12px;
   top: 10px;
-  width: 340px;
+  /* Scales with the viewport so that on laptop screens it stays clear of the middle of the view. */
+  width: clamp(200px, 34%, 340px);
+  container-type: inline-size;
   background: rgba(14, 18, 27, 0.86);
   backdrop-filter: blur(8px);
   border: 1px solid var(--line-2);
@@ -1025,6 +1027,9 @@ button {
   text-overflow: ellipsis;
   min-width: 0;
 }
+.ghost-head > :last-child {
+  margin-left: auto;
+}
 .ghost-head .seg button {
   font-size: 11.5px;
   padding: 0 7px;
@@ -1033,9 +1038,28 @@ button {
 .ghost-panel canvas {
   display: block;
   width: 100%;
-  height: 240px;
+  aspect-ratio: 17 / 12;
   touch-action: none;
   cursor: grab;
+}
+@container (max-width: 300px) {
+  .ghost-head .title {
+    display: none;
+  }
+}
+@container (max-width: 240px) {
+  .ghost-head .seg button {
+    padding: 0 5px;
+  }
+}
+.ghost-canvas {
+  position: relative;
+}
+.ghost-sync {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: rgba(14, 18, 27, 0.72);
 }
 .ghost-legend {
   display: flex;
@@ -1426,9 +1450,6 @@ kbd {
   .ghost-panel {
     width: 200px;
     top: 52px;
-  }
-  .ghost-panel canvas {
-    height: 140px;
   }
   .ghost-legend .bar,
   .ghost-head .title {

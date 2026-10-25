@@ -97,15 +97,6 @@ export function GhostView() {
             ]}
           />
         )}
-        {!ghost.sync && (
-          <IconButton
-            icon="frame"
-            hint="Follow the main camera again"
-            className="btn ghost small icon"
-            size={14}
-            onClick={() => setGhost({ sync: true })}
-          />
-        )}
         <IconButton
           icon="close"
           hint="Hide the context view"
@@ -114,7 +105,18 @@ export function GhostView() {
           onClick={() => setGhost({ visible: false })}
         />
       </div>
-      <canvas ref={canvasRef} />
+      <div className="ghost-canvas">
+        <canvas ref={canvasRef} />
+        {!ghost.sync && (
+          <IconButton
+            icon="frame"
+            hint="Follow the main camera again"
+            className="btn ghost small icon ghost-sync"
+            size={14}
+            onClick={() => setGhost({ sync: true })}
+          />
+        )}
+      </div>
       <div className="ghost-legend">
         {!flat && ghost.mode === 'side' && n > 4 && (
           <select

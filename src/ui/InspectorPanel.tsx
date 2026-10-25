@@ -6,7 +6,7 @@ import type { FrameData, ObjectFrame } from '../scene/frame';
 import { paths, type ShadingMode, type ViewSettings } from '../scene/model';
 import { useApp, useValue } from '../scene/store';
 import { describeSlice } from '../shapes/classify';
-import { sdfValues } from '../shapes/registry';
+import { getShape, sdfValues } from '../shapes/registry';
 import type { SdfShapeDef } from '../shapes/types';
 import { Segmented, Switch, Term, ValueSlider } from './controls';
 import { useFrame } from './hooks';
@@ -188,12 +188,14 @@ function InfoSection() {
   const frame = useFrame(150);
   const obj = scene.objects.find((o) => o.id === selectedId) ?? scene.objects[0];
   const of = frame?.objects.find((o) => o.obj.id === obj?.id);
-  if (!obj || !of) return null;
-  const info = of.def.info(scene.dim, obj.options);
+  if (!obj) return null;
+  // The frame can lag a render behind the scene (right after loading a preset, say), so the shape's
+  // description comes from the scene object: pairing the frame's shape with these options gives NaNs.
+  const info = getShape(obj.shape).info(scene.dim, obj.options);
   return (
     <div className="section">
       <div className="section-title">About</div>
-      <SliceCard o={of} />
+      {of && <SliceCard o={of} />}
       <div style={{ marginTop: 12 }} className="info-name">
         {objectName(obj, scene.dim)}
         {info.symbol && (
